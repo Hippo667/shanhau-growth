@@ -4,453 +4,155 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>山花成长记 - 支教孩子成长记录</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* ===== CSS Variables & Reset ===== */
 :root {
-  --primary: #E8915C;
-  --primary-dark: #D4784A;
-  --primary-light: #FFF0E8;
-  --green: #5B9A6B;
-  --green-light: #E8F5EC;
-  --blue: #5B7F9A;
-  --blue-light: #E8F0F8;
-  --yellow: #E8C75B;
-  --yellow-light: #FFFBE8;
-  --bg: #FAF7F2;
-  --card: #FFFFFF;
-  --text: #3D3530;
-  --text-secondary: #8C8078;
-  --border: #E8E0D8;
-  --shadow-sm: 0 1px 3px rgba(61,53,48,0.08);
-  --shadow: 0 4px 16px rgba(61,53,48,0.10);
-  --shadow-lg: 0 8px 32px rgba(61,53,48,0.12);
-  --radius: 16px;
-  --radius-sm: 10px;
-  --sidebar-w: 220px;
-  --header-h: 64px;
-  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --primary: #E8915C; --primary-dark: #D4784A; --primary-light: #FFF0E8;
+  --green: #5B9A6B; --green-light: #E8F5EC; --blue: #5B7F9A; --blue-light: #E8F0F8;
+  --yellow: #E8C75B; --yellow-light: #FFFBE8; --bg: #FAF7F2; --card: #FFFFFF;
+  --text: #3D3530; --text-secondary: #8C8078; --border: #E8E0D8;
+  --shadow-sm: 0 1px 3px rgba(61,53,48,0.08); --shadow: 0 4px 16px rgba(61,53,48,0.10);
+  --shadow-lg: 0 8px 32px rgba(61,53,48,0.12); --radius: 16px; --radius-sm: 10px;
+  --sidebar-w: 220px; --header-h: 64px; --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-  min-height: 100vh;
+  background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh;
 }
-
-/* ===== Login Page ===== */
+/* ===== Auth Page ===== */
 .auth-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, #FFF0E8 0%, #FAF7F2 30%, #E8F5EC 70%, #E8F0F8 100%);
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
+  padding: 20px; position: relative; overflow: hidden;
 }
-.auth-page::before {
-  content: '';
-  position: absolute;
-  top: -50%; left: -50%;
-  width: 200%; height: 200%;
-  background: radial-gradient(circle at 20% 80%, rgba(232,145,92,0.08) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(91,154,107,0.08) 0%, transparent 50%),
-              radial-gradient(circle at 50% 50%, rgba(91,127,154,0.05) 0%, transparent 50%);
-  animation: authBgFloat 20s ease-in-out infinite;
-}
-@keyframes authBgFloat {
-  0%, 100% { transform: translate(0, 0); }
-  33% { transform: translate(1%, -1%); }
-  66% { transform: translate(-1%, 1%); }
-}
-.auth-container {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 440px;
-}
-.auth-header {
-  text-align: center;
-  margin-bottom: 28px;
-}
-.auth-header .logo {
-  font-size: 48px;
-  margin-bottom: 8px;
-}
-.auth-header h1 {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-.auth-header p {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-.auth-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
-  padding: 32px 28px;
-}
-.auth-tabs {
-  display: flex;
-  background: var(--bg);
-  border-radius: 10px;
-  padding: 4px;
-  margin-bottom: 24px;
-}
+.auth-container { position: relative; z-index: 1; width: 100%; max-width: 440px; }
+.auth-header { text-align: center; margin-bottom: 28px; }
+.auth-header .logo { font-size: 48px; margin-bottom: 8px; }
+.auth-header h1 { font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.auth-header p { font-size: 14px; color: var(--text-secondary); }
+.auth-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 32px 28px; }
+.auth-tabs { display: flex; background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
 .auth-tab {
-  flex: 1;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition);
-  border: none;
-  background: none;
-  color: var(--text-secondary);
-  text-align: center;
+  flex: 1; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all var(--transition); border: none; background: none; color: var(--text-secondary); text-align: center;
 }
-.auth-tab.active {
-  background: var(--card);
-  color: var(--primary);
-  box-shadow: var(--shadow-sm);
-}
+.auth-tab.active { background: var(--card); color: var(--primary); box-shadow: var(--shadow-sm); }
 .auth-form { display: none; }
 .auth-form.active { display: block; }
 .auth-form .form-group { margin-bottom: 16px; }
 .auth-form .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); }
 .auth-form .form-input, .auth-form .form-select {
-  width: 100%;
-  padding: 11px 14px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-family: inherit;
-  transition: border-color var(--transition);
-  background: var(--bg);
-  color: var(--text);
+  width: 100%; padding: 11px 14px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 14px; font-family: inherit; transition: border-color var(--transition); background: var(--bg); color: var(--text);
 }
-.auth-form .form-input:focus, .auth-form .form-select:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-.auth-form .btn {
-  width: 100%;
-  padding: 12px;
-  font-size: 15px;
-  justify-content: center;
-  margin-top: 8px;
-}
-.auth-error {
-  color: #E85C5C;
-  font-size: 13px;
-  margin-top: 8px;
-  display: none;
-}
-.demo-accounts {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
-}
-.demo-accounts .demo-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
-}
-.demo-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.demo-chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all var(--transition);
-  border: 1.5px solid var(--border);
-  background: var(--card);
-  color: var(--text);
-}
-.demo-chip:hover {
-  border-color: var(--primary);
-  background: var(--primary-light);
-  transform: translateY(-1px);
-}
-.demo-chip .demo-avatar {
-  width: 26px; height: 26px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: #fff;
-  flex-shrink: 0;
-}
+.auth-form .form-input:focus, .auth-form .form-select:focus { outline: none; border-color: var(--primary); }
+.auth-form .btn { width: 100%; padding: 12px; font-size: 15px; justify-content: center; margin-top: 8px; }
+.auth-error { color: #E85C5C; font-size: 13px; margin-top: 8px; display: none; }
+.auth-info { background: #FFFBE8; border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 16px; font-size: 12px; color: #8C8028; line-height: 1.6; }
 .role-tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 600;
+  display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600;
 }
 .role-tag.teacher { background: var(--primary-light); color: var(--primary); }
 .role-tag.volunteer { background: var(--blue-light); color: var(--blue); }
 .role-tag.parent { background: var(--green-light); color: var(--green); }
 .role-tag.child { background: var(--yellow-light); color: #C8A52B; }
 
-/* ===== Main App Layout (hidden before login) ===== */
-.app-layout {
-  display: none;
-  min-height: 100vh;
-}
+/* ===== App Layout ===== */
+.app-layout { display: none; min-height: 100vh; }
 .app-layout.logged-in { display: flex; }
 
 /* ===== Sidebar ===== */
 .sidebar {
-  width: var(--sidebar-w);
-  background: var(--card);
-  border-right: 1px solid var(--border);
-  position: fixed;
-  top: 0; left: 0; bottom: 0;
-  display: flex;
-  flex-direction: column;
-  z-index: 100;
+  width: var(--sidebar-w); background: var(--card); border-right: 1px solid var(--border);
+  position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100;
   transition: transform var(--transition);
 }
 .sidebar-logo {
-  padding: 24px 20px;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-bottom: 1px solid var(--border);
+  padding: 24px 20px; font-size: 20px; font-weight: 700; color: var(--primary);
+  display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border);
 }
 .sidebar-logo .icon { font-size: 28px; }
-.sidebar-nav {
-  flex: 1;
-  padding: 16px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+.sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
 .nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: all var(--transition); font-size: 15px; font-weight: 500;
+  color: var(--text-secondary); border: none; background: none; width: 100%; text-align: left;
 }
 .nav-item:hover { background: var(--bg); color: var(--text); }
 .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
 .nav-item .nav-icon { font-size: 20px; width: 24px; text-align: center; }
 .nav-badge {
-  margin-left: auto;
-  background: var(--primary);
-  color: #fff;
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-weight: 600;
+  margin-left: auto; background: var(--primary); color: #fff; font-size: 11px; padding: 2px 8px;
+  border-radius: 10px; font-weight: 600;
 }
 
 /* ===== Main ===== */
-.main {
-  margin-left: var(--sidebar-w);
-  flex: 1;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+.main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
 .header {
-  height: var(--header-h);
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  position: sticky;
-  top: 0;
-  z-index: 50;
+  height: var(--header-h); background: var(--card); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; padding: 0 32px;
+  position: sticky; top: 0; z-index: 50;
 }
 .header h1 { font-size: 18px; font-weight: 600; }
-.header-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-.menu-btn {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 4px;
-  color: var(--text);
-}
-.content {
-  flex: 1;
-  padding: 32px;
-  max-width: 1100px;
-  width: 100%;
-}
+.header-actions { display: flex; gap: 12px; align-items: center; }
+.menu-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; padding: 4px; color: var(--text); }
+.content { flex: 1; padding: 32px; max-width: 1100px; width: 100%; }
 
 /* ===== User Menu ===== */
-.user-menu {
-  position: relative;
-}
+.user-menu { position: relative; }
 .user-trigger {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 12px 6px 6px;
-  border-radius: 24px;
-  cursor: pointer;
-  transition: all var(--transition);
-  border: none;
-  background: none;
-  color: var(--text);
-  font-family: inherit;
+  display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 24px;
+  cursor: pointer; transition: all var(--transition); border: none; background: none; color: var(--text); font-family: inherit;
 }
 .user-trigger:hover { background: var(--bg); }
 .user-trigger-avatar {
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px; font-weight: 700; color: #fff;
-  flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0;
 }
 .user-trigger-name { font-size: 13px; font-weight: 600; }
 .user-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: var(--card);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-lg);
-  min-width: 200px;
-  padding: 8px;
-  display: none;
-  z-index: 150;
+  position: absolute; top: calc(100% + 8px); right: 0; background: var(--card); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg); min-width: 200px; padding: 8px; display: none; z-index: 150;
 }
 .user-dropdown.open { display: block; animation: fadeIn 0.15s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .user-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all var(--transition);
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  color: var(--text);
-  font-family: inherit;
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px;
+  font-size: 14px; cursor: pointer; transition: all var(--transition); border: none; background: none;
+  width: 100%; text-align: left; color: var(--text); font-family: inherit;
 }
 .user-dropdown-item:hover { background: var(--bg); }
 .user-dropdown-item.danger { color: #E85C5C; }
 .user-dropdown-item.danger:hover { background: #FFF0F0; }
-.user-dropdown-divider {
-  height: 1px;
-  background: var(--border);
-  margin: 6px 0;
-}
+.user-dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
 /* ===== Buttons ===== */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition);
-  border: none;
-  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all var(--transition); border: none; text-decoration: none;
 }
 .btn-primary { background: var(--primary); color: #fff; }
 .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(232,145,92,0.35); }
 .btn-outline { background: #fff; color: var(--primary); border: 2px solid var(--primary); }
 .btn-outline:hover { background: var(--primary-light); }
 .btn-sm { padding: 6px 14px; font-size: 13px; border-radius: 8px; }
-.btn-icon {
-  width: 36px; height: 36px; border-radius: 50%;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: none; border: none; cursor: pointer; font-size: 18px;
-  transition: all var(--transition); color: var(--text-secondary);
-}
-.btn-icon:hover { background: var(--bg); color: var(--primary); }
-.btn-icon.liked { color: #E85C5C; }
+.btn-danger { background: #FFF0F0; color: #E85C5C; }
+.btn-danger:hover { background: #FFE0E0; }
 
 /* ===== Cards ===== */
-.card {
-  background: var(--card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  padding: 24px;
-  transition: all var(--transition);
-}
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 24px; transition: all var(--transition); }
 .card:hover { box-shadow: var(--shadow); }
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-}
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
 
-/* ===== Stats Row ===== */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 32px;
-}
+/* ===== Stats ===== */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
 .stat-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 20px 24px;
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  transition: all var(--transition);
+  background: var(--card); border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: 16px; transition: all var(--transition);
 }
 .stat-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
-.stat-icon {
-  width: 48px; height: 48px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  flex-shrink: 0;
-}
+.stat-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
 .stat-icon.orange { background: var(--primary-light); color: var(--primary); }
 .stat-icon.green { background: var(--green-light); color: var(--green); }
 .stat-icon.blue { background: var(--blue-light); color: var(--blue); }
@@ -460,28 +162,15 @@ body {
 
 /* ===== Child Card ===== */
 .child-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  transition: all var(--transition);
+  background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm);
+  cursor: pointer; transition: all var(--transition);
 }
 .child-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
 .child-cover {
-  height: 160px;
-  background: linear-gradient(135deg, var(--primary-light), #FFE0CC);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 64px;
-  position: relative;
+  height: 160px; background: linear-gradient(135deg, var(--primary-light), #FFE0CC);
+  display: flex; align-items: center; justify-content: center; font-size: 64px; position: relative;
 }
-.child-cover img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  position: absolute; top: 0; left: 0;
-}
+.child-cover img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
 .child-info { padding: 16px; }
 .child-name { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
 .child-meta { font-size: 13px; color: var(--text-secondary); display: flex; gap: 12px; }
@@ -489,300 +178,137 @@ body {
 
 /* ===== Timeline ===== */
 .timeline { position: relative; padding-left: 32px; }
-.timeline::before {
-  content: ''; position: absolute; left: 11px; top: 8px; bottom: 8px;
-  width: 2px; background: var(--border); border-radius: 1px;
-}
-.timeline-item {
-  position: relative;
-  margin-bottom: 28px;
-  display: flex;
-  gap: 16px;
-}
+.timeline::before { content: ''; position: absolute; left: 11px; top: 8px; bottom: 8px; width: 2px; background: var(--border); border-radius: 1px; }
+.timeline-item { position: relative; margin-bottom: 28px; display: flex; gap: 16px; }
 .timeline-dot {
-  position: absolute;
-  left: -26px; top: 6px;
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  background: var(--primary);
-  border: 3px solid var(--card);
-  box-shadow: 0 0 0 2px var(--primary);
-  z-index: 1;
+  position: absolute; left: -26px; top: 6px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--primary); border: 3px solid var(--card); box-shadow: 0 0 0 2px var(--primary); z-index: 1;
 }
 .timeline-dot.photo { background: var(--blue); box-shadow: 0 0 0 2px var(--blue); }
 .timeline-dot.milestone { background: var(--green); box-shadow: 0 0 0 2px var(--green); }
-.timeline-content {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 18px 20px;
-  box-shadow: var(--shadow-sm);
-  flex: 1;
-}
+.timeline-content { background: var(--card); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow-sm); flex: 1; }
 .timeline-date { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
 .timeline-title { font-size: 15px; font-weight: 600; margin: 4px 0; }
 .timeline-desc { font-size: 13px; color: var(--text-secondary); }
-.timeline-media {
-  margin-top: 12px;
-  display: flex; gap: 8px; flex-wrap: wrap;
-}
+.timeline-media { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
 .timeline-media img, .timeline-media video {
-  width: 120px; height: 120px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: transform var(--transition);
+  width: 120px; height: 120px; object-fit: cover; border-radius: var(--radius-sm);
+  cursor: pointer; transition: transform var(--transition);
 }
 .timeline-media img:hover, .timeline-media video:hover { transform: scale(1.05); }
 
 /* ===== Message Card ===== */
-.msg-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 20px 24px;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition);
-}
+.msg-card { background: var(--card); border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow-sm); transition: all var(--transition); }
 .msg-card:hover { box-shadow: var(--shadow); }
-.msg-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.msg-avatar {
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: 700;
-  color: #fff; flex-shrink: 0;
-}
+.msg-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.msg-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0; }
 .msg-author { font-weight: 600; font-size: 15px; }
 .msg-time { font-size: 12px; color: var(--text-secondary); }
 .msg-content { font-size: 14px; line-height: 1.7; color: var(--text); }
 .msg-to { display: inline-block; background: var(--primary-light); color: var(--primary); padding: 2px 10px; border-radius: 12px; font-size: 12px; margin-bottom: 8px; }
-.msg-actions {
-  display: flex; gap: 16px;
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-}
-.msg-action {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 13px; color: var(--text-secondary);
-  cursor: pointer; transition: color var(--transition);
-  background: none; border: none; padding: 4px 0;
-}
+.msg-actions { display: flex; gap: 16px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+.msg-action { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: color var(--transition); background: none; border: none; padding: 4px 0; }
 .msg-action:hover { color: var(--primary); }
 .msg-action.liked { color: #E85C5C; }
-.comments-section { margin-top: 12px; }
-.comment-item {
-  display: flex; gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-}
+.comment-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .comment-item:last-child { border-bottom: none; }
-.comment-avatar {
-  width: 30px; height: 30px;
-  border-radius: 50%;
-  background: var(--bg);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; flex-shrink: 0;
-}
+.comment-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
 .comment-body { flex: 1; }
 .comment-author { font-size: 13px; font-weight: 600; }
 .comment-text { font-size: 13px; color: var(--text); }
 .comment-time { font-size: 11px; color: var(--text-secondary); }
 
 /* ===== QA Card ===== */
-.qa-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 20px 24px;
-  box-shadow: var(--shadow-sm);
-}
-.qa-badge {
-  display: inline-block;
-  padding: 3px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-}
+.qa-card { background: var(--card); border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow-sm); }
+.qa-badge { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
 .qa-badge.student { background: var(--yellow-light); color: #C8A52B; }
 .qa-badge.volunteer { background: var(--blue-light); color: var(--blue); }
 .qa-title { font-size: 16px; font-weight: 700; margin: 10px 0 6px; }
 .qa-content { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
 .qa-answers { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
-.qa-answer {
-  background: var(--bg);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  margin-bottom: 10px;
-}
+.qa-answer { background: var(--bg); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; }
 .qa-answer-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .qa-answer-text { font-size: 13px; line-height: 1.6; }
 
 /* ===== Modal ===== */
 .modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(61,53,48,0.4);
-  backdrop-filter: blur(4px);
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.2s ease;
+  position: fixed; inset: 0; background: rgba(61,53,48,0.4); backdrop-filter: blur(4px);
+  z-index: 200; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease;
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .modal {
-  background: var(--card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
-  width: 90%;
-  max-width: 560px;
-  max-height: 85vh;
-  overflow-y: auto;
-  animation: slideUp 0.25s ease;
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  width: 90%; max-width: 560px; max-height: 85vh; overflow-y: auto; animation: slideUp 0.25s ease;
 }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky; top: 0; background: var(--card); z-index: 1;
-  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; background: var(--card); z-index: 1;
 }
 .modal-header h2 { font-size: 18px; font-weight: 700; }
 .modal-close {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  border: none; background: var(--bg);
-  font-size: 18px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all var(--transition);
+  width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--bg);
+  font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 .modal-close:hover { background: #fee; color: #e55; }
 .modal-body { padding: 24px; }
 .form-group { margin-bottom: 16px; }
 .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); }
 .form-input, .form-textarea, .form-select {
-  width: 100%;
-  padding: 10px 14px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-family: inherit;
-  transition: border-color var(--transition);
-  background: var(--bg);
-  color: var(--text);
+  width: 100%; padding: 10px 14px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 14px; font-family: inherit; transition: border-color var(--transition); background: var(--bg); color: var(--text);
 }
-.form-input:focus, .form-textarea:focus, .form-select:focus {
-  outline: none;
-  border-color: var(--primary);
-}
+.form-input:focus, .form-textarea:focus, .form-select:focus { outline: none; border-color: var(--primary); }
 .form-textarea { resize: vertical; min-height: 80px; }
 .form-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
 /* ===== Tabs ===== */
-.tabs {
-  display: flex; gap: 4px;
-  background: var(--bg);
-  padding: 4px;
-  border-radius: 12px;
-  margin-bottom: 24px;
-}
+.tabs { display: flex; gap: 4px; background: var(--bg); padding: 4px; border-radius: 12px; margin-bottom: 24px; }
 .tab {
-  flex: 1;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 14px; font-weight: 600;
-  cursor: pointer; transition: all var(--transition);
-  border: none; background: none;
-  color: var(--text-secondary);
-  text-align: center;
+  flex: 1; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all var(--transition); border: none; background: none; color: var(--text-secondary); text-align: center;
 }
 .tab.active { background: var(--card); color: var(--primary); box-shadow: var(--shadow-sm); }
 
 /* ===== Toast ===== */
-.toast-container {
-  position: fixed; top: 24px; right: 24px;
-  z-index: 300;
-  display: flex; flex-direction: column; gap: 8px;
-}
+.toast-container { position: fixed; top: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
 .toast {
-  padding: 12px 20px;
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  box-shadow: var(--shadow-lg);
-  font-size: 14px; font-weight: 500;
-  animation: slideIn 0.3s ease;
-  display: flex; align-items: center; gap: 8px;
+  padding: 12px 20px; border-radius: var(--radius-sm); background: var(--card); box-shadow: var(--shadow-lg);
+  font-size: 14px; font-weight: 500; animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 8px;
 }
 @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
 .toast.success { border-left: 4px solid var(--green); }
 .toast.error { border-left: 4px solid #E85C5C; }
 
 /* ===== Empty State ===== */
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-secondary);
-}
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
 .empty-state .empty-icon { font-size: 56px; margin-bottom: 16px; }
 .empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text); }
 .empty-state p { font-size: 14px; margin-bottom: 20px; }
 
 /* ===== Media Viewer ===== */
-.media-viewer {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.9);
-  z-index: 250;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.media-viewer img, .media-viewer video {
-  max-width: 90vw; max-height: 90vh;
-  border-radius: 8px;
-}
+.media-viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 250; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.media-viewer img, .media-viewer video { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
 
 /* ===== Child Detail ===== */
-.child-detail-header {
-  display: flex; gap: 24px;
-  align-items: flex-start;
-  margin-bottom: 32px;
-}
-.child-detail-avatar {
-  width: 120px; height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: linear-gradient(135deg, var(--primary-light), #FFE0CC);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 52px;
-  flex-shrink: 0;
-}
+.child-detail-header { display: flex; gap: 24px; align-items: flex-start; margin-bottom: 32px; }
+.child-detail-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; background: linear-gradient(135deg, var(--primary-light), #FFE0CC); display: flex; align-items: center; justify-content: center; font-size: 52px; flex-shrink: 0; }
 .child-detail-info h2 { font-size: 24px; margin-bottom: 4px; }
 .child-detail-info .meta { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
 
-/* ===== Profile Modal ===== */
-.profile-info-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 0;
-}
+/* ===== Profile ===== */
+.profile-info-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; }
 .profile-info-row + .profile-info-row { border-top: 1px solid var(--border); }
 .profile-label { font-size: 13px; color: var(--text-secondary); width: 60px; flex-shrink: 0; }
 .profile-value { font-size: 14px; font-weight: 600; }
 
+/* ===== Spinner ===== */
+.spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-overlay { display: flex; align-items: center; justify-content: center; padding: 40px; gap: 12px; color: var(--text-secondary); }
+
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-    box-shadow: var(--shadow-lg);
-  }
+  .sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); }
   .sidebar.open { transform: translateX(0); }
   .main { margin-left: 0; }
   .header { padding: 0 16px; }
@@ -793,7 +319,6 @@ body {
   .child-detail-header { flex-direction: column; align-items: center; text-align: center; }
   .tabs { flex-direction: column; }
   .auth-card { padding: 24px 18px; }
-  .demo-list { flex-direction: column; }
   .user-trigger-name { display: none; }
 }
 @media (max-width: 480px) {
@@ -806,7 +331,7 @@ body {
 </head>
 <body>
 
-<!-- ===== LOGIN PAGE ===== -->
+<!-- ===== AUTH PAGE ===== -->
 <div class="auth-page" id="authPage">
   <div class="auth-container">
     <div class="auth-header">
@@ -819,111 +344,61 @@ body {
         <button class="auth-tab active" onclick="switchAuthTab('login')">登录</button>
         <button class="auth-tab" onclick="switchAuthTab('register')">注册</button>
       </div>
-
-      <!-- Login Form -->
       <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label class="form-label">用户名</label>
-          <input class="form-input" type="text" id="loginUsername" placeholder="请输入用户名" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">密码</label>
-          <input class="form-input" type="password" id="loginPassword" placeholder="请输入密码" required>
-        </div>
+        <div class="form-group"><label class="form-label">邮箱</label><input class="form-input" type="email" id="loginEmail" placeholder="请输入邮箱" required></div>
+        <div class="form-group"><label class="form-label">密码</label><input class="form-input" type="password" id="loginPassword" placeholder="请输入密码" required></div>
         <div class="auth-error" id="loginError"></div>
-        <button type="submit" class="btn btn-primary">登 录</button>
+        <button type="submit" class="btn btn-primary" id="loginBtn">登 录</button>
       </form>
-
-      <!-- Register Form -->
       <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
-        <div class="form-group">
-          <label class="form-label">用户名</label>
-          <input class="form-input" type="text" id="regUsername" placeholder="创建用户名（字母+数字）" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">密码</label>
-          <input class="form-input" type="password" id="regPassword" placeholder="设置密码（至少4位）" required minlength="4">
-        </div>
-        <div class="form-group">
-          <label class="form-label">显示名称</label>
-          <input class="form-input" type="text" id="regName" placeholder="你的真实姓名或昵称" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">身份角色</label>
-          <select class="form-select" id="regRole" onchange="onRegRoleChange()">
-            <option value="volunteer">🎓 支教志愿者（大学生）</option>
-            <option value="teacher">👩‍🏫 老师</option>
-            <option value="parent">👨‍👩‍👧 家长</option>
-            <option value="child">🎒 孩子（小学生）</option>
-          </select>
-        </div>
-        <div class="form-group" id="linkedChildrenGroup" style="display:none;">
-          <label class="form-label">关联孩子（家长必选）</label>
-          <select class="form-select" id="regLinkedChild">
-            <option value="">选择你的孩子</option>
-          </select>
-          <div class="form-hint">家长需要关联至少一个孩子以查看其成长记录</div>
+        <div class="form-group"><label class="form-label">邮箱</label><input class="form-input" type="email" id="regEmail" placeholder="用于登录的邮箱" required></div>
+        <div class="form-group"><label class="form-label">密码</label><input class="form-input" type="password" id="regPassword" placeholder="至少6位密码" required minlength="6"></div>
+        <div class="form-group"><label class="form-label">显示名称</label><input class="form-input" type="text" id="regName" placeholder="你的真实姓名或昵称" required></div>
+        <div class="form-group"><label class="form-label">身份角色</label>
+          <select class="form-select" id="regRole"><option value="volunteer">🎓 支教志愿者</option><option value="teacher">👩‍🏫 老师</option><option value="parent">👨‍👩‍👧 家长</option><option value="child">🎒 孩子</option></select>
         </div>
         <div class="auth-error" id="registerError"></div>
-        <button type="submit" class="btn btn-primary">注 册</button>
+        <button type="submit" class="btn btn-primary" id="registerBtn">注 册</button>
       </form>
-
-      <!-- Demo Accounts -->
-      <div class="demo-accounts">
-        <div class="demo-title">🔑 演示账号（一键登录）</div>
-        <div class="demo-list" id="demoList"></div>
+      <div class="auth-info" style="margin-top:16px;">
+        💡 <b>首次使用？</b>先用 <b>老师</b> 身份注册第一个账号，进入平台后点击"初始化演示数据"即可自动创建演示账号和示例内容。<br>
+        🔧 如注册后无法登录，请去 Supabase Dashboard → Authentication → Settings → 关闭 "Confirm email"
       </div>
     </div>
   </div>
 </div>
 
-<!-- ===== MAIN APP (hidden until login) ===== -->
+<!-- ===== MAIN APP ===== -->
 <div class="app-layout" id="appLayout">
 
-<!-- ===== Sidebar ===== -->
 <aside class="sidebar" id="sidebar">
-  <div class="sidebar-logo">
-    <span class="icon">🌻</span> 山花成长记
-  </div>
+  <div class="sidebar-logo"><span class="icon">🌻</span> 山花成长记</div>
   <nav class="sidebar-nav">
-    <button class="nav-item active" data-page="home">
-      <span class="nav-icon">🏠</span> 首页概览
-    </button>
-    <button class="nav-item" data-page="children">
-      <span class="nav-icon">👧</span> 孩子档案
-      <span class="nav-badge" id="childCount">0</span>
-    </button>
-    <button class="nav-item" data-page="growth">
-      <span class="nav-icon">📸</span> 成长点滴
-    </button>
-    <button class="nav-item" data-page="messages">
-      <span class="nav-icon">💌</span> 寄语祝福
-    </button>
-    <button class="nav-item" data-page="qa">
-      <span class="nav-icon">💬</span> 问答互动
-    </button>
+    <button class="nav-item active" data-page="home"><span class="nav-icon">🏠</span> 首页概览</button>
+    <button class="nav-item" data-page="children"><span class="nav-icon">👧</span> 孩子档案 <span class="nav-badge" id="childCount">0</span></button>
+    <button class="nav-item" data-page="growth"><span class="nav-icon">📸</span> 成长点滴</button>
+    <button class="nav-item" data-page="messages"><span class="nav-icon">💌</span> 寄语祝福</button>
+    <button class="nav-item" data-page="qa"><span class="nav-icon">💬</span> 问答互动</button>
   </nav>
 </aside>
 
-<!-- ===== Main Content ===== -->
 <div class="main">
   <header class="header">
     <div style="display:flex;align-items:center;gap:12px;">
-      <button class="menu-btn" id="menuBtn" title="菜单">☰</button>
+      <button class="menu-btn" id="menuBtn">☰</button>
       <h1 id="pageTitle">首页概览</h1>
     </div>
     <div class="header-actions">
+      <button class="btn btn-outline btn-sm" id="initDemoBtn" onclick="initDemoData()" style="display:none;" title="创建演示账号和示例数据">🎭 初始化演示数据</button>
       <button class="btn btn-primary btn-sm" id="globalAddBtn">+ 添加记录</button>
       <div class="user-menu" id="userMenu">
         <button class="user-trigger" id="userTrigger" onclick="toggleUserMenu()">
           <div class="user-trigger-avatar" id="userAvatar"></div>
-          <span class="user-trigger-name" id="userName"></span>
+          <span class="user-trigger-name" id="userNameDisplay"></span>
           <span style="font-size:10px;">▾</span>
         </button>
         <div class="user-dropdown" id="userDropdown">
-          <div style="padding:10px 14px;font-size:12px;color:var(--text-secondary);">
-            <span id="dropdownRole"></span>
-          </div>
+          <div style="padding:10px 14px;font-size:12px;color:var(--text-secondary);" id="dropdownRole"></div>
           <div class="user-dropdown-divider"></div>
           <button class="user-dropdown-item" onclick="showProfile()">👤 个人信息</button>
           <button class="user-dropdown-item danger" onclick="handleLogout()">🚪 退出登录</button>
@@ -931,235 +406,121 @@ body {
       </div>
     </div>
   </header>
-  <div class="content" id="content"></div>
+  <div class="content" id="content"><div class="loading-overlay"><div class="spinner"></div>加载中...</div></div>
 </div>
 
 </div><!-- /app-layout -->
 
-<!-- ===== Toast Container ===== -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-/* ================================================================
-   DATA LAYER
-   ================================================================ */
-const STORAGE_KEY = 'mountain_flowers_';
+// ============================================================
+// SUPABASE CLIENT
+// ============================================================
+const SUPABASE_URL = 'https://spsxuxpwlhalydzzqmjh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwc3h1eHB3bGhhbHlkenpxbWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MjM3NzQsImV4cCI6MjA5NDQ5OTc3NH0.cqcA_qzBoMzDWDWPJCw-t_pthcjpg_xYofWHFqJmuyg';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function saveData(key, data) {
-  localStorage.setItem(STORAGE_KEY + key, JSON.stringify(data));
-}
-function loadData(key, fallback) {
-  const raw = localStorage.getItem(STORAGE_KEY + key);
-  if (raw === null) return fallback;
-  try { return JSON.parse(raw); } catch { return fallback; }
-}
+// ============================================================
+// GLOBALS
+// ============================================================
+const ROLE_LABELS = { teacher: '老师', volunteer: '支教志愿者', parent: '家长', child: '孩子' };
+const ROLE_ICONS = { teacher: '👩‍🏫', volunteer: '🎓', parent: '👨‍👩‍👧', child: '🎒' };
+const AVATAR_COLORS = ['#E8915C','#5B9A6B','#5B7F9A','#C8A52B','#E85C5C','#8B5CF6'];
 
-// ==================== USER SYSTEM ====================
-const ROLE_LABELS = {
-  teacher: '老师',
-  volunteer: '支教志愿者',
-  parent: '家长',
-  child: '孩子'
-};
-const ROLE_ICONS = {
-  teacher: '👩‍🏫',
-  volunteer: '🎓',
-  parent: '👨‍👩‍👧',
-  child: '🎒'
-};
-const AVATAR_COLORS = ['#E8915C','#5B9A6B','#5B7F9A','#C8A52B','#E85C5C','#8B5CF6','#06B6D4','#F59E0B'];
+let currentUser = null;   // Supabase auth user
+let currentProfile = null; // profiles table row
+let children = [];
+let growthRecords = [];
+let messages = [];
+let qaPosts = [];
+let profiles = []; // cached for display
 
-function seedAllData() {
-  if (localStorage.getItem(STORAGE_KEY + 'users')) return; // already seeded
-
-  // Seed users
-  const users = [
-    { id: 'u1', username: 'teacher_wang', password: '123456', name: '王老师', role: 'teacher', avatarColor: '#E8915C', joinDate: '2024-09-01' },
-    { id: 'u2', username: 'volunteer_liu', password: '123456', name: '刘志愿者', role: 'volunteer', avatarColor: '#5B7F9A', joinDate: '2024-09-01' },
-    { id: 'u3', username: 'parent_zhang', password: '123456', name: '小梅妈妈', role: 'parent', avatarColor: '#5B9A6B', linkedChildren: ['c1'], joinDate: '2024-09-01' },
-    { id: 'u4', username: 'child_xiaomei', password: '123456', name: '王小梅', role: 'child', avatarColor: '#C8A52B', linkedChildId: 'c1', joinDate: '2024-09-01' },
-  ];
-  saveData('users', users);
-
-  // Seed children
-  const children = [
-    { id: 'c1', name: '王小梅', age: 10, grade: '四年级', desc: '性格开朗，喜欢画画和唱歌，是班上的文艺委员。家里有个弟弟，每天放学后帮忙做家务。', avatar: '', joinDate: '2024-09-01', createdBy: 'u1' },
-    { id: 'c2', name: '李浩然', age: 8, grade: '二年级', desc: '活泼好动，对数学特别感兴趣，经常追着老师问问题。梦想是当一名科学家。', avatar: '', joinDate: '2024-09-01', createdBy: 'u1' },
-    { id: 'c3', name: '张小芳', age: 11, grade: '五年级', desc: '文静乖巧，作文写得非常好，是语文课代表。喜欢读书，尤其喜欢童话故事。', avatar: '', joinDate: '2024-09-01', createdBy: 'u1' },
-    { id: 'c4', name: '陈强', age: 9, grade: '三年级', desc: '班上的小班长，责任心强，乐于助人。喜欢体育运动，特别是足球和跑步。', avatar: '', joinDate: '2024-09-01', createdBy: 'u2' },
-  ];
-  saveData('children', children);
-
-  // Seed growth records
-  const growth = [
-    { id: 'g1', childId: 'c1', childName: '王小梅', date: '2024-10-15', type: 'photo', title: '第一次画水彩画', desc: '美术课上，小梅第一次接触水彩，画了一幅山里的日出，色彩运用让人惊喜。', media: [], likes: 5, likedBy: [], comments: [{ id: 'co1', author: '王老师', authorId: 'u1', text: '画得真好，继续加油！', date: '2024-10-15' }], createdBy: 'u1' },
-    { id: 'g2', childId: 'c2', childName: '李浩然', date: '2024-11-02', type: 'milestone', title: '数学竞赛获奖', desc: '浩然参加镇上的数学竞赛，获得二年级组第二名，这是他第一次参加校外比赛。', media: [], likes: 8, likedBy: [], comments: [], createdBy: 'u1' },
-    { id: 'g3', childId: 'c3', childName: '张小芳', date: '2024-12-20', type: 'photo', title: '作文比赛一等奖', desc: '小芳的作文《山那边的世界》在县作文比赛中获得一等奖，文章真挚感人。', media: [], likes: 12, likedBy: [], comments: [], createdBy: 'u2' },
-    { id: 'g4', childId: 'c4', childName: '陈强', date: '2025-01-10', type: 'video', title: '运动会100米冠军', desc: '学校运动会上，陈强以14秒的成绩夺得100米短跑冠军，全班同学都在为他加油。', media: [], likes: 7, likedBy: [], comments: [], createdBy: 'u2' },
-  ];
-  saveData('growth', growth);
-
-  // Seed messages
-  const messages = [
-    { id: 'm1', author: '刘志愿者', authorId: 'u2', avatarColor: '#5B7F9A', toChild: '王小梅', content: '小梅，你画的那幅《山里的日出》老师一直保存在手机里。你的色彩感特别好，希望你继续保持对画画的热爱，用画笔记录生活的美好。', date: '2024-12-01', likes: 3, likedBy: [], comments: [{ id: 'c1', author: '王小梅', text: '谢谢刘老师！我会继续努力的！', date: '2024-12-02' }] },
-    { id: 'm2', author: '王老师', authorId: 'u1', avatarColor: '#E8915C', toChild: '', content: '看到孩子们在这么艰苦的条件下还这么努力地学习，真的很感动。希望你们都能实现自己的梦想，走出大山，看到更广阔的世界。我们会一直关注和支持你们的。', date: '2025-01-05', likes: 6, likedBy: [], comments: [] },
-    { id: 'm3', author: '小梅妈妈', authorId: 'u3', avatarColor: '#5B9A6B', toChild: '王小梅', content: '小梅，妈妈看到你的画被老师表扬了，特别骄傲。虽然家里条件不好，但只要你喜欢画画，妈妈一定支持你。好好学习，将来当一个画家！', date: '2025-02-14', likes: 9, likedBy: [], comments: [] },
-  ];
-  saveData('messages', messages);
-
-  // Seed Q&A
-  const qa = [
-    { id: 'q1', author: '刘志愿者', authorId: 'u2', role: 'volunteer', title: '你们最喜欢的科目是什么？为什么？', content: '我很好奇在现在的课程中，大家最喜欢上什么课？有没有什么特别的原因？', date: '2024-11-10', answers: [
-      { id: 'a1', author: '王小梅', authorId: 'u4', text: '我最喜欢美术课，因为可以画画，画出心里想的东西。而且美术老师总是鼓励我们发挥想象力。', date: '2024-11-11', likes: 4 },
-      { id: 'a2', author: '李浩然', text: '我最喜欢数学！因为解出难题的感觉特别开心，而且老师说数学学好了可以当科学家。', date: '2024-11-12', likes: 3 },
-    ], likes: 5, likedBy: [] },
-    { id: 'q2', author: '王小梅', authorId: 'u4', role: 'student', title: '大学是什么样子的？', content: '老师们都是从大学来的，我想知道大学里都学什么？是不是有很多很多的书？校园是不是特别大？', date: '2024-11-15', answers: [
-      { id: 'a3', author: '刘志愿者', authorId: 'u2', text: '大学是一个很美好的地方！有很多同学来自全国各地，图书馆里有看不完的书，校园很大很大，还有各种有趣的社团活动。最重要的是，大学能让你学到想学的任何知识。加油学习，你一定能考上好大学！', date: '2024-11-16', likes: 7 },
-    ], likes: 8, likedBy: [] },
-  ];
-  saveData('qa', qa);
-}
-
-seedAllData();
-
-// Global data references
-let users = loadData('users', []);
-let children = loadData('children', []);
-let growthRecords = loadData('growth', []);
-let messages = loadData('messages', []);
-let qaPosts = loadData('qa', []);
-let currentUser = null;
-
-function refreshData() {
-  users = loadData('users', []);
-  children = loadData('children', []);
-  growthRecords = loadData('growth', []);
-  messages = loadData('messages', []);
-  qaPosts = loadData('qa', []);
-}
-
-/* ================================================================
-   AUTH SYSTEM
-   ================================================================ */
-function initAuth() {
-  // Update linked children dropdown for registration
-  updateLinkedChildrenSelect();
-
-  // Render demo account buttons
-  renderDemoAccounts();
-
-  // Check session
-  const session = loadData('session', null);
-  if (session) {
-    const user = users.find(u => u.id === session.userId);
-    if (user) {
-      currentUser = user;
-      showApp();
-      return;
-    }
-  }
-  showAuthPage();
-}
-
-function updateLinkedChildrenSelect() {
-  const sel = document.getElementById('regLinkedChild');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">选择你的孩子</option>' +
-    children.map(c => `<option value="${c.id}">${c.name}（${c.grade}）</option>`).join('');
-}
-
-function renderDemoAccounts() {
-  const container = document.getElementById('demoList');
-  if (!container) return;
-  container.innerHTML = users.map(u => `
-    <div class="demo-chip" onclick="quickLogin('${u.id}')" title="密码: 123456">
-      <div class="demo-avatar" style="background:${u.avatarColor};">${u.name.charAt(0)}</div>
-      <span>${u.name}</span>
-      <span class="role-tag ${u.role}">${ROLE_LABELS[u.role]}</span>
-    </div>
-  `).join('');
-}
-
-function quickLogin(userId) {
-  const user = users.find(u => u.id === userId);
-  if (user) {
-    currentUser = user;
-    saveData('session', { userId: user.id });
-    showApp();
-    showToast(`欢迎回来，${user.name}！`, 'success');
-  }
-}
-
-function handleLogin(e) {
+// ============================================================
+// AUTH SYSTEM
+// ============================================================
+async function handleLogin(e) {
   e.preventDefault();
-  const username = document.getElementById('loginUsername').value.trim();
+  const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
   const errorEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = '登录中...';
 
-  const user = users.find(u => u.username === username && u.password === password);
-  if (!user) {
-    errorEl.textContent = '用户名或密码错误，请重试';
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    errorEl.textContent = error.message === 'Invalid login credentials' ? '邮箱或密码错误' : error.message;
     errorEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = '登 录';
     return;
   }
   errorEl.style.display = 'none';
-  currentUser = user;
-  saveData('session', { userId: user.id });
-  showApp();
-  showToast(`欢迎回来，${user.name}！`, 'success');
+  await onLoginSuccess(data.user);
+  btn.disabled = false; btn.textContent = '登 录';
 }
 
-function handleRegister(e) {
+async function handleRegister(e) {
   e.preventDefault();
-  const username = document.getElementById('regUsername').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
   const password = document.getElementById('regPassword').value;
   const name = document.getElementById('regName').value.trim();
   const role = document.getElementById('regRole').value;
-  const linkedChild = document.getElementById('regLinkedChild').value;
   const errorEl = document.getElementById('registerError');
+  const btn = document.getElementById('registerBtn');
+  btn.disabled = true; btn.textContent = '注册中...';
 
-  if (users.find(u => u.username === username)) {
-    errorEl.textContent = '该用户名已被使用，请换一个';
+  const { data, error } = await supabase.auth.signUp({
+    email, password,
+    options: { data: { name, role } }
+  });
+
+  if (error) {
+    errorEl.textContent = error.message.includes('already registered') ? '该邮箱已被注册' : error.message;
     errorEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = '注 册';
     return;
   }
-  if (role === 'parent' && !linkedChild) {
-    errorEl.textContent = '家长需要关联至少一个孩子';
-    errorEl.style.display = 'block';
-    return;
+
+  // If user is immediately signed in (email confirmation disabled)
+  if (data.user && data.session) {
+    // Create profile
+    await supabase.from('profiles').insert({
+      id: data.user.id, username: email, name, role,
+      avatar_color: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
+    });
+    await onLoginSuccess(data.user);
+  } else {
+    showToast('注册成功！如开启了邮箱验证，请查收验证邮件后登录。', 'success');
+    switchAuthTab('login');
   }
+  btn.disabled = false; btn.textContent = '注 册';
   errorEl.style.display = 'none';
-
-  const newUser = {
-    id: genId(),
-    username,
-    password,
-    name,
-    role,
-    avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
-    linkedChildren: role === 'parent' ? [linkedChild] : [],
-    linkedChildId: role === 'child' ? linkedChild || undefined : undefined,
-    joinDate: new Date().toISOString().slice(0, 10)
-  };
-  users.push(newUser);
-  saveData('users', users);
-  currentUser = newUser;
-  saveData('session', { userId: newUser.id });
-  refreshData();
-  showApp();
-  showToast(`注册成功！欢迎加入，${name}！`, 'success');
 }
 
-function onRegRoleChange() {
-  const role = document.getElementById('regRole').value;
-  document.getElementById('linkedChildrenGroup').style.display = (role === 'parent' || role === 'child') ? 'block' : 'none';
-  if (role === 'parent') {
-    document.getElementById('linkedChildrenGroup').querySelector('.form-label').textContent = '关联孩子（家长必选）';
-    document.getElementById('linkedChildrenGroup').querySelector('.form-hint').textContent = '家长需要关联至少一个孩子以查看其成长记录';
-  } else if (role === 'child') {
-    document.getElementById('linkedChildrenGroup').querySelector('.form-label').textContent = '关联孩子档案（可选）';
-    document.getElementById('linkedChildrenGroup').querySelector('.form-hint').textContent = '如果你是已建档的孩子，请选择自己的档案';
+async function onLoginSuccess(user) {
+  currentUser = user;
+  // Load profile
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  currentProfile = profile;
+  if (!profile) {
+    // Auto-create profile from metadata
+    const meta = user.user_metadata || {};
+    const { data: newProfile } = await supabase.from('profiles').insert({
+      id: user.id, username: user.email, name: meta.name || user.email, role: meta.role || 'volunteer',
+      avatar_color: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
+    }).select().single();
+    currentProfile = newProfile;
   }
+  showApp();
+  showToast(`欢迎回来，${currentProfile.name}！`, 'success');
+}
+
+async function handleLogout() {
+  document.getElementById('userDropdown').classList.remove('open');
+  await supabase.auth.signOut();
+  currentUser = null;
+  currentProfile = null;
+  showAuthPage();
 }
 
 function switchAuthTab(tab) {
@@ -1171,27 +532,14 @@ function switchAuthTab(tab) {
   } else {
     document.querySelector('.auth-tab:last-child').classList.add('active');
     document.getElementById('registerForm').classList.add('active');
-    updateLinkedChildrenSelect();
   }
   document.getElementById('loginError').style.display = 'none';
   document.getElementById('registerError').style.display = 'none';
 }
 
-function handleLogout() {
-  if (!confirm('确定要退出登录吗？')) return;
-  currentUser = null;
-  localStorage.removeItem(STORAGE_KEY + 'session');
-  document.getElementById('userDropdown').classList.remove('open');
-  showAuthPage();
-}
-
 function showAuthPage() {
   document.getElementById('authPage').style.display = 'flex';
   document.getElementById('appLayout').classList.remove('logged-in');
-  updateLinkedChildrenSelect();
-  renderDemoAccounts();
-  document.getElementById('loginUsername').value = '';
-  document.getElementById('loginPassword').value = '';
 }
 
 function showApp() {
@@ -1199,83 +547,87 @@ function showApp() {
   document.getElementById('appLayout').classList.add('logged-in');
   setupUserMenu();
   render();
-  updateBadges();
 }
 
 function setupUserMenu() {
-  if (!currentUser) return;
-  document.getElementById('userAvatar').style.background = currentUser.avatarColor;
-  document.getElementById('userAvatar').textContent = currentUser.name.charAt(0);
-  document.getElementById('userName').textContent = currentUser.name;
-  document.getElementById('dropdownRole').innerHTML =
-    `<span class="role-tag ${currentUser.role}">${ROLE_ICONS[currentUser.role]} ${ROLE_LABELS[currentUser.role]}</span>`;
+  if (!currentProfile) return;
+  document.getElementById('userAvatar').style.background = currentProfile.avatar_color || '#E8915C';
+  document.getElementById('userAvatar').textContent = currentProfile.name.charAt(0);
+  document.getElementById('userNameDisplay').textContent = currentProfile.name;
+  document.getElementById('dropdownRole').innerHTML = `<span class="role-tag ${currentProfile.role}">${ROLE_ICONS[currentProfile.role]} ${ROLE_LABELS[currentProfile.role]}</span>`;
+  // Show init demo button only for teacher/volunteer
+  document.getElementById('initDemoBtn').style.display = (currentProfile.role === 'teacher' || currentProfile.role === 'volunteer') ? '' : 'none';
 }
 
-function toggleUserMenu() {
-  document.getElementById('userDropdown').classList.toggle('open');
-}
+function toggleUserMenu() { document.getElementById('userDropdown').classList.toggle('open'); }
 
 function showProfile() {
   document.getElementById('userDropdown').classList.remove('open');
-  const childName = currentUser.linkedChildId
-    ? (children.find(c => c.id === currentUser.linkedChildId)?.name || '无')
-    : (currentUser.linkedChildren?.map(id => children.find(c => c.id === id)?.name).filter(Boolean).join('、') || '无');
-
+  const linkedNames = (currentProfile.linked_children || []).map(id => children.find(c => c.id === id)?.name || '').filter(Boolean).join('、') || '无';
   showModal('个人信息', `
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
-      <div style="width:56px;height:56px;border-radius:50%;background:${currentUser.avatarColor};display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;">${currentUser.name.charAt(0)}</div>
-      <div>
-        <div style="font-weight:700;font-size:17px;">${currentUser.name}</div>
-        <div><span class="role-tag ${currentUser.role}">${ROLE_ICONS[currentUser.role]} ${ROLE_LABELS[currentUser.role]}</span></div>
-      </div>
+      <div style="width:56px;height:56px;border-radius:50%;background:${currentProfile.avatar_color};display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;">${currentProfile.name.charAt(0)}</div>
+      <div><div style="font-weight:700;font-size:17px;">${currentProfile.name}</div><div><span class="role-tag ${currentProfile.role}">${ROLE_ICONS[currentProfile.role]} ${ROLE_LABELS[currentProfile.role]}</span></div></div>
     </div>
-    <div class="profile-info-row"><span class="profile-label">用户名</span><span class="profile-value">${currentUser.username}</span></div>
-    <div class="profile-info-row"><span class="profile-label">角色</span><span class="profile-value">${ROLE_LABELS[currentUser.role]}</span></div>
-    <div class="profile-info-row"><span class="profile-label">关联孩子</span><span class="profile-value">${childName}</span></div>
-    <div class="profile-info-row"><span class="profile-label">加入时间</span><span class="profile-value">${currentUser.joinDate}</span></div>
+    <div class="profile-info-row"><span class="profile-label">邮箱</span><span class="profile-value">${currentProfile.username || currentUser.email}</span></div>
+    <div class="profile-info-row"><span class="profile-label">角色</span><span class="profile-value">${ROLE_LABELS[currentProfile.role]}</span></div>
+    <div class="profile-info-row"><span class="profile-label">关联孩子</span><span class="profile-value">${linkedNames}</span></div>
+    <div class="profile-info-row"><span class="profile-label">加入时间</span><span class="profile-value">${new Date(currentProfile.created_at).toLocaleDateString('zh-CN')}</span></div>
   `, () => {});
 }
 
-/* ================================================================
-   ROLE-BASED HELPERS
-   ================================================================ */
-// Users who can manage (create/edit/delete) children and growth records
-function canManage() {
-  if (!currentUser) return false;
-  return currentUser.role === 'teacher' || currentUser.role === 'volunteer';
+// ============================================================
+// DATA HELPERS
+// ============================================================
+async function loadAllData() {
+  const [cRes, gRes, mRes, qRes, pRes] = await Promise.all([
+    supabase.from('children').select('*').order('created_at', { ascending: true }),
+    supabase.from('growth_records').select('*').order('date', { ascending: false }),
+    supabase.from('messages').select('*').order('created_at', { ascending: false }),
+    supabase.from('qa_posts').select('*').order('created_at', { ascending: false }),
+    supabase.from('profiles').select('*')
+  ]);
+  children = cRes.data || [];
+  growthRecords = gRes.data || [];
+  messages = mRes.data || [];
+  qaPosts = qRes.data || [];
+  profiles = pRes.data || [];
+  // Load answers for each QA post
+  for (const qa of qaPosts) {
+    const { data: answers } = await supabase.from('qa_answers').select('*').eq('post_id', qa.id).order('created_at', { ascending: true });
+    qa.answers = answers || [];
+  }
+  // Load comments for growth records and messages
+  for (const g of growthRecords) {
+    const { data: comments } = await supabase.from('comments').select('*').eq('parent_type', 'growth').eq('parent_id', g.id).order('created_at', { ascending: true });
+    g.comments = comments || [];
+  }
+  for (const m of messages) {
+    const { data: comments } = await supabase.from('comments').select('*').eq('parent_type', 'message').eq('parent_id', m.id).order('created_at', { ascending: true });
+    m.comments = comments || [];
+  }
 }
 
-// Users who can write messages
-function canWriteMessage() {
-  if (!currentUser) return false;
-  return currentUser.role !== 'child';
-}
-
-// Get children visible to current user
+// ============================================================
+// ROLE HELPERS
+// ============================================================
+function canManage() { return currentProfile && (currentProfile.role === 'teacher' || currentProfile.role === 'volunteer'); }
+function canWriteMessage() { return currentProfile && currentProfile.role !== 'child'; }
 function getVisibleChildren() {
-  if (!currentUser) return [];
-  if (currentUser.role === 'parent') {
-    const linked = currentUser.linkedChildren || [];
-    return children.filter(c => linked.includes(c.id));
-  }
-  if (currentUser.role === 'child' && currentUser.linkedChildId) {
-    return children.filter(c => c.id === currentUser.linkedChildId);
-  }
-  return children; // teacher, volunteer see all
+  if (!currentProfile) return [];
+  if (currentProfile.role === 'parent') return children.filter(c => (currentProfile.linked_children || []).includes(c.id));
+  if (currentProfile.role === 'child') return children.filter(c => c.created_by === currentUser.id);
+  return children;
 }
-
-// Check if user can delete a specific item
-function canDelete(itemCreatedBy) {
-  if (!currentUser) return false;
+function canDelete(createdBy) {
+  if (!currentProfile) return false;
   if (canManage()) return true;
-  return itemCreatedBy === currentUser.id;
+  return createdBy === currentUser.id;
 }
 
-function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
-
-/* ================================================================
-   ROUTING & RENDERING
-   ================================================================ */
+// ================================================================
+// ROUTING & RENDERING
+// ================================================================
 let currentPage = 'home';
 const contentEl = document.getElementById('content');
 const pageTitle = document.getElementById('pageTitle');
@@ -1283,13 +635,13 @@ const globalAddBtn = document.getElementById('globalAddBtn');
 const menuBtn = document.getElementById('menuBtn');
 const sidebar = document.getElementById('sidebar');
 
-function navigate(page) {
+async function navigate(page) {
   currentPage = page;
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   const navItem = document.querySelector(`[data-page="${page}"]`);
   if (navItem) navItem.classList.add('active');
   sidebar.classList.remove('open');
-  render();
+  await render();
 }
 
 document.querySelectorAll('.nav-item').forEach(el => {
@@ -1298,19 +650,14 @@ document.querySelectorAll('.nav-item').forEach(el => {
 
 menuBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
 document.addEventListener('click', (e) => {
-  if (!sidebar.contains(e.target) && e.target !== menuBtn && sidebar.classList.contains('open')) {
-    sidebar.classList.remove('open');
-  }
-  // Close user dropdown on outside click
-  const userMenu = document.getElementById('userMenu');
-  const dropdown = document.getElementById('userDropdown');
-  if (dropdown && userMenu && !userMenu.contains(e.target)) {
-    dropdown.classList.remove('open');
-  }
+  if (!sidebar.contains(e.target) && e.target !== menuBtn && sidebar.classList.contains('open')) sidebar.classList.remove('open');
+  const um = document.getElementById('userMenu');
+  const dd = document.getElementById('userDropdown');
+  if (dd && um && !um.contains(e.target)) dd.classList.remove('open');
 });
 
-globalAddBtn.addEventListener('click', () => {
-  if (!currentUser) return;
+globalAddBtn.addEventListener('click', async () => {
+  if (!currentProfile) return;
   if (currentPage === 'children' && canManage()) showAddChildModal();
   else if (currentPage === 'growth' && canManage()) showAddGrowthModal();
   else if (currentPage === 'messages' && canWriteMessage()) showAddMessageModal();
@@ -1321,11 +668,13 @@ globalAddBtn.addEventListener('click', () => {
   else navigate('children');
 });
 
-function render() {
+async function render() {
   if (!currentUser) return;
-  refreshData();
+  contentEl.innerHTML = '<div class="loading-overlay"><div class="spinner"></div>加载中...</div>';
+  await loadAllData();
   updateBadges();
   updateAddButton();
+  updateInitDemoButton();
   switch (currentPage) {
     case 'home': renderHome(); break;
     case 'children': renderChildren(); break;
@@ -1336,157 +685,106 @@ function render() {
 }
 
 function updateBadges() {
-  const visible = getVisibleChildren();
-  document.getElementById('childCount').textContent = visible.length;
+  document.getElementById('childCount').textContent = getVisibleChildren().length;
 }
 
 function updateAddButton() {
   const btn = globalAddBtn;
   if (currentPage === 'children') {
-    if (canManage()) { btn.textContent = '+ 添加孩子'; btn.style.display = ''; }
-    else { btn.style.display = 'none'; }
+    btn.style.display = canManage() ? '' : 'none'; btn.textContent = '+ 添加孩子';
   } else if (currentPage === 'growth') {
-    if (canManage()) { btn.textContent = '+ 添加记录'; btn.style.display = ''; }
-    else { btn.style.display = 'none'; }
+    btn.style.display = canManage() ? '' : 'none'; btn.textContent = '+ 添加记录';
   } else if (currentPage === 'messages') {
-    if (canWriteMessage()) { btn.textContent = '+ 写寄语'; btn.style.display = ''; }
-    else { btn.style.display = 'none'; }
+    btn.style.display = canWriteMessage() ? '' : 'none'; btn.textContent = '+ 写寄语';
   } else if (currentPage === 'qa') {
-    btn.textContent = '+ 提问'; btn.style.display = '';
+    btn.style.display = ''; btn.textContent = '+ 提问';
   } else {
-    btn.textContent = '+ 添加记录'; btn.style.display = '';
+    btn.style.display = ''; btn.textContent = '+ 添加记录';
   }
 }
 
-/* ================================================================
-   HOME PAGE
-   ================================================================ */
+function updateInitDemoButton() {
+  document.getElementById('initDemoBtn').style.display = (currentProfile && (currentProfile.role === 'teacher' || currentProfile.role === 'volunteer')) ? '' : 'none';
+}
+
+// ================================================================
+// HOME
+// ================================================================
 function renderHome() {
-  pageTitle.textContent = `欢迎，${currentUser.name}`;
-  updateAddButton();
+  pageTitle.textContent = `欢迎，${currentProfile.name}`;
   const visibleChildren = getVisibleChildren();
+  const visibleGrowth = growthRecords.filter(g => visibleChildren.some(c => c.id === g.child_id));
   const totalLikes = [...growthRecords, ...messages, ...qaPosts].reduce((s, r) => s + (r.likes || 0), 0);
-  const totalComments = [...growthRecords, ...messages, ...qaPosts].reduce((s, r) => {
-    let c = (r.comments || []).length;
-    if (r.answers) c += r.answers.length;
-    return s + c;
-  }, 0);
-  const visibleGrowth = growthRecords.filter(g => visibleChildren.some(c => c.id === g.childId));
+  const totalComments = [...growthRecords, ...messages].reduce((s, r) => s + (r.comments || []).length, 0) + qaPosts.reduce((s, q) => s + (q.answers || []).length, 0);
 
   contentEl.innerHTML = `
     <div style="margin-bottom:24px;font-size:14px;color:var(--text-secondary);">
-      当前身份：<span class="role-tag ${currentUser.role}">${ROLE_ICONS[currentUser.role]} ${ROLE_LABELS[currentUser.role]}</span>
-      ${currentUser.role === 'parent' ? ` · 关联孩子：${visibleChildren.map(c => c.name).join('、')}` : ''}
-      ${currentUser.role === 'child' && currentUser.linkedChildId ? ` · 已绑定档案` : ''}
+      当前身份：<span class="role-tag ${currentProfile.role}">${ROLE_ICONS[currentProfile.role]} ${ROLE_LABELS[currentProfile.role]}</span>
+      ${currentProfile.role === 'parent' ? ` · 关联：${visibleChildren.map(c => c.name).join('、')}` : ''}
+      ${visibleChildren.length === 0 && children.length === 0 ? '<div style="margin-top:12px;background:#FFFBE8;padding:12px;border-radius:8px;">💡 还没有孩子档案，点击上方 <b>🎭 初始化演示数据</b> 按钮自动创建，或手动添加。</div>' : ''}
     </div>
-
     <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-icon orange">👧</div>
-        <div><div class="stat-value">${visibleChildren.length}</div><div class="stat-label">可见孩子</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon green">📸</div>
-        <div><div class="stat-value">${visibleGrowth.length}</div><div class="stat-label">成长记录</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon blue">💌</div>
-        <div><div class="stat-value">${messages.length}</div><div class="stat-label">寄语祝福</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon yellow">❤️</div>
-        <div><div class="stat-value">${totalLikes + totalComments}</div><div class="stat-label">点赞+评论</div></div>
-      </div>
+      <div class="stat-card"><div class="stat-icon orange">👧</div><div><div class="stat-value">${visibleChildren.length}</div><div class="stat-label">可见孩子</div></div></div>
+      <div class="stat-card"><div class="stat-icon green">📸</div><div><div class="stat-value">${visibleGrowth.length}</div><div class="stat-label">成长记录</div></div></div>
+      <div class="stat-card"><div class="stat-icon blue">💌</div><div><div class="stat-value">${messages.length}</div><div class="stat-label">寄语祝福</div></div></div>
+      <div class="stat-card"><div class="stat-icon yellow">❤️</div><div><div class="stat-value">${totalLikes + totalComments}</div><div class="stat-label">互动总数</div></div></div>
     </div>
-
     <h3 style="margin-bottom:16px;font-size:16px;">📋 最近动态</h3>
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      ${getRecentActivity().map(a => `
-        <div class="card" style="padding:16px 20px;display:flex;align-items:center;gap:16px;">
-          <div style="font-size:24px;">${a.icon}</div>
-          <div style="flex:1;">
-            <div style="font-size:14px;font-weight:600;">${a.title}</div>
-            <div style="font-size:12px;color:var(--text-secondary);">${a.desc} · ${a.date}</div>
-          </div>
-          <button class="btn btn-outline btn-sm" onclick="navigate('${a.link}')">查看</button>
-        </div>
-      `).join('') || '<div class="empty-state"><div class="empty-icon">🌱</div><h3>一切从这里开始</h3><p>开始记录孩子们的成长吧</p></div>'}
-    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">${getRecentActivity()}</div>
   `;
 }
 
 function getRecentActivity() {
   const visibleChildren = getVisibleChildren();
   const items = [];
-  growthRecords.filter(g => visibleChildren.some(c => c.id === g.childId)).slice(-3).reverse().forEach(g => {
-    items.push({
-      icon: g.type === 'photo' ? '🖼️' : g.type === 'video' ? '🎬' : '🌟',
-      title: `${g.childName} · ${g.title}`,
-      desc: g.desc.slice(0, 40) + '...',
-      date: g.date, link: 'growth'
-    });
+  growthRecords.filter(g => visibleChildren.some(c => c.id === g.child_id)).slice(0, 3).forEach(g => {
+    items.push({ icon: g.type === 'photo' ? '🖼️' : g.type === 'video' ? '🎬' : '🌟', title: `${g.child_name} · ${g.title}`, desc: (g.description || '').slice(0, 40), date: g.date, link: 'growth' });
   });
-  messages.slice(-2).reverse().forEach(m => {
-    items.push({
-      icon: '💌', title: `${m.author} 的寄语`,
-      desc: m.content.slice(0, 40) + '...',
-      date: m.date, link: 'messages'
-    });
+  messages.slice(0, 2).forEach(m => {
+    items.push({ icon: '💌', title: `${m.author} 的寄语`, desc: m.content.slice(0, 40), date: m.date, link: 'messages' });
   });
-  qaPosts.slice(-1).forEach(q => {
-    items.push({
-      icon: '💬', title: q.title,
-      desc: `${q.answers.length} 个回答`,
-      date: q.date, link: 'qa'
-    });
+  qaPosts.slice(0, 1).forEach(q => {
+    items.push({ icon: '💬', title: q.title, desc: `${(q.answers || []).length} 个回答`, date: q.date, link: 'qa' });
   });
-  return items.slice(0, 8);
+  return items.length > 0 ? items.map(a => `
+    <div class="card" style="padding:16px 20px;display:flex;align-items:center;gap:16px;">
+      <div style="font-size:24px;">${a.icon}</div>
+      <div style="flex:1;"><div style="font-size:14px;font-weight:600;">${a.title}</div><div style="font-size:12px;color:var(--text-secondary);">${a.desc} · ${a.date}</div></div>
+      <button class="btn btn-outline btn-sm" onclick="navigate('${a.link}')">查看</button>
+    </div>
+  `).join('') : '<div class="empty-state"><div class="empty-icon">🌱</div><h3>一切从这里开始</h3><p>平台数据将实时同步给所有用户</p></div>';
 }
 
-/* ================================================================
-   CHILDREN PAGE
-   ================================================================ */
+// ================================================================
+// CHILDREN PAGE
+// ================================================================
 function renderChildren() {
   pageTitle.textContent = '孩子档案';
-  updateAddButton();
   const visibleChildren = getVisibleChildren();
-
   contentEl.innerHTML = `
     <div class="card-grid">
       ${visibleChildren.map(c => `
         <div class="child-card" onclick="viewChild('${c.id}')">
-          <div class="child-cover">
-            ${c.avatar ? `<img src="${c.avatar}" alt="${c.name}">` : (c.name.charAt(0))}
-          </div>
+          <div class="child-cover">${c.avatar ? `<img src="${c.avatar}" alt="${c.name}">` : c.name.charAt(0)}</div>
           <div class="child-info">
             <div class="child-name">${c.name}</div>
-            <div class="child-meta">
-              <span>🎂 ${c.age}岁</span><span>📚 ${c.grade}</span>
-            </div>
-            <div class="child-desc">${c.desc}</div>
+            <div class="child-meta"><span>🎂 ${c.age}岁</span><span>📚 ${c.grade}</span></div>
+            <div class="child-desc">${c.description || ''}</div>
           </div>
         </div>
       `).join('')}
     </div>
-    ${visibleChildren.length === 0 ? `
-      <div class="empty-state">
-        <div class="empty-icon">👧</div>
-        <h3>还没有可见的孩子档案</h3>
-        <p>${currentUser.role === 'parent' ? '请确认你的账号已关联孩子' : '请联系老师或志愿者添加孩子档案'}</p>
-      </div>
-    ` : ''}
+    ${visibleChildren.length === 0 ? `<div class="empty-state"><div class="empty-icon">👧</div><h3>还没有可见的孩子档案</h3><p>${canManage() ? '点击上方按钮添加孩子，或点击"初始化演示数据"' : '请联系老师或志愿者添加孩子档案'}</p></div>` : ''}
   `;
 }
 
-function viewChild(id) {
+async function viewChild(id) {
   const child = children.find(c => c.id === id);
   if (!child) return;
-  // Check visibility
   const visible = getVisibleChildren();
   if (!visible.some(c => c.id === id)) { showToast('你没有权限查看该孩子', 'error'); return; }
 
-  const childGrowth = growthRecords.filter(g => g.childId === id).sort((a, b) => b.date.localeCompare(a.date));
-
+  const childGrowth = growthRecords.filter(g => g.child_id === id);
   pageTitle.textContent = child.name;
   updateAddButton();
 
@@ -1496,62 +794,31 @@ function viewChild(id) {
       <div class="child-detail-avatar">${child.avatar ? `<img src="${child.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : child.name.charAt(0)}</div>
       <div class="child-detail-info">
         <h2>${child.name}</h2>
-        <div class="meta">🎂 ${child.age}岁 · 📚 ${child.grade} · 📅 ${child.joinDate} 加入</div>
-        <p style="font-size:14px;color:var(--text-secondary);line-height:1.7;">${child.desc}</p>
+        <div class="meta">🎂 ${child.age}岁 · 📚 ${child.grade} · 📅 ${child.join_date || ''} 加入</div>
+        <p style="font-size:14px;color:var(--text-secondary);line-height:1.7;">${child.description || ''}</p>
         <div style="margin-top:12px;display:flex;gap:8px;">
-          ${canEdit ? `
-            <button class="btn btn-outline btn-sm" onclick="editChild('${child.id}')">✏️ 编辑</button>
+          ${canEdit ? `<button class="btn btn-outline btn-sm" onclick="editChild('${child.id}')">✏️ 编辑</button>
             <button class="btn btn-sm" style="background:#fee;color:#e55;" onclick="deleteChild('${child.id}')">🗑️ 删除</button>
-            <button class="btn btn-primary btn-sm" onclick="showAddGrowthModal('${child.id}')">+ 添加成长记录</button>
-          ` : ''}
+            <button class="btn btn-primary btn-sm" onclick="showAddGrowthModal('${child.id}')">+ 添加记录</button>` : ''}
         </div>
       </div>
     </div>
-
     <h3 style="margin-bottom:16px;">📸 成长记录 (${childGrowth.length})</h3>
     ${childGrowth.length > 0 ? `<div class="timeline">
-      ${childGrowth.map(g => `
-        <div class="timeline-item">
-          <div class="timeline-dot ${g.type === 'photo' ? 'photo' : g.type === 'milestone' ? 'milestone' : ''}"></div>
-          <div class="timeline-content">
-            <div class="timeline-date">${g.date}${g.createdBy ? ` · by ${users.find(u=>u.id===g.createdBy)?.name || ''}` : ''}</div>
-            <div class="timeline-title">${g.type === 'photo' ? '🖼️ ' : g.type === 'video' ? '🎬 ' : '🌟 '}${g.title}</div>
-            <div class="timeline-desc">${g.desc}</div>
-            ${g.media && g.media.length > 0 ? `
-              <div class="timeline-media">
-                ${g.media.map(m => m.type === 'video'
-                  ? `<video src="${m.url}" controls style="width:120px;height:120px;object-fit:cover;border-radius:10px;"></video>`
-                  : `<img src="${m.url}" onclick="event.stopPropagation();viewMedia('${m.url}','image')" loading="lazy">`
-                ).join('')}
-              </div>
-            ` : ''}
-            <div style="display:flex;gap:16px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
-              <button class="msg-action ${(g.likedBy||[]).includes(currentUser.id) ? 'liked' : ''}" onclick="event.stopPropagation();toggleLikeGrowth('${g.id}')">❤️ <span>${g.likes || 0}</span></button>
-              <button class="msg-action" onclick="event.stopPropagation();toggleGrowthComments('${g.id}')">💬 <span>${(g.comments || []).length}</span></button>
-              ${canDelete(g.createdBy) ? `<button class="msg-action" onclick="event.stopPropagation();deleteGrowth('${g.id}')">🗑️ 删除</button>` : ''}
-            </div>
-            <div id="growthComments-${g.id}" style="display:none;margin-top:12px;">
-              ${renderComments(g.comments || [], 'growth', g.id)}
-              ${renderCommentInput('growth', g.id)}
-            </div>
-          </div>
-        </div>
-      `).join('')}
-    </div>` : `<div class="empty-state"><div class="empty-icon">📸</div><h3>还没有成长记录</h3><p>记录孩子每一个值得纪念的成长瞬间</p></div>`}
+      ${childGrowth.map(g => renderGrowthItem(g, true)).join('')}
+    </div>` : '<div class="empty-state"><div class="empty-icon">📸</div><h3>还没有成长记录</h3></div>'}
     <button class="btn btn-primary" style="margin-top:20px;" onclick="navigate('children')">← 返回所有孩子</button>
   `;
 }
 
-/* ================================================================
-   GROWTH PAGE
-   ================================================================ */
+// ================================================================
+// GROWTH PAGE
+// ================================================================
 function renderGrowth() {
   pageTitle.textContent = '成长点滴';
   updateAddButton();
   const visibleChildren = getVisibleChildren();
-  const sorted = growthRecords
-    .filter(g => visibleChildren.some(c => c.id === g.childId))
-    .sort((a, b) => b.date.localeCompare(a.date));
+  const sorted = growthRecords.filter(g => visibleChildren.some(c => c.id === g.child_id));
 
   contentEl.innerHTML = `
     <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
@@ -1560,42 +827,36 @@ function renderGrowth() {
         ${visibleChildren.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
       </select>
       <select class="form-select" style="width:auto;" id="growthTypeFilter" onchange="filterGrowth()">
-        <option value="">📋 全部类型</option>
-        <option value="photo">🖼️ 照片</option>
-        <option value="video">🎬 视频</option>
-        <option value="milestone">🌟 里程碑</option>
+        <option value="">📋 全部类型</option><option value="photo">🖼️ 照片</option><option value="video">🎬 视频</option><option value="milestone">🌟 里程碑</option>
       </select>
     </div>
+    ${sorted.length > 0 ? `<div class="timeline">${sorted.map(g => renderGrowthItem(g, false)).join('')}</div>` : `<div class="empty-state"><div class="empty-icon">📸</div><h3>还没有成长记录</h3></div>`}
+  `;
+}
 
-    ${sorted.length > 0 ? `<div class="timeline">
-      ${sorted.map(g => `
-        <div class="timeline-item" data-child="${g.childId}" data-type="${g.type}">
-          <div class="timeline-dot ${g.type === 'photo' ? 'photo' : g.type === 'milestone' ? 'milestone' : ''}"></div>
-          <div class="timeline-content">
-            <div class="timeline-date">${g.date} · 👧 ${g.childName}${g.createdBy ? ` · by ${users.find(u=>u.id===g.createdBy)?.name||''}` : ''}</div>
-            <div class="timeline-title">${g.type === 'photo' ? '🖼️ ' : g.type === 'video' ? '🎬 ' : '🌟 '}${g.title}</div>
-            <div class="timeline-desc">${g.desc}</div>
-            ${g.media && g.media.length > 0 ? `
-              <div class="timeline-media">
-                ${g.media.map(m => m.type === 'video'
-                  ? `<video src="${m.url}" controls style="width:120px;height:120px;object-fit:cover;border-radius:10px;"></video>`
-                  : `<img src="${m.url}" onclick="viewMedia('${m.url}','image')" loading="lazy">`
-                ).join('')}
-              </div>
-            ` : ''}
-            <div style="display:flex;gap:16px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
-              <button class="msg-action ${(g.likedBy||[]).includes(currentUser.id) ? 'liked' : ''}" onclick="toggleLikeGrowth('${g.id}')">❤️ <span>${g.likes || 0}</span></button>
-              <button class="msg-action" onclick="toggleGrowthComments('${g.id}')">💬 <span>${(g.comments || []).length}</span></button>
-              ${canDelete(g.createdBy) ? `<button class="msg-action" onclick="deleteGrowth('${g.id}')">🗑️ 删除</button>` : ''}
-            </div>
-            <div id="growthComments-${g.id}" style="display:none;margin-top:12px;">
-              ${renderComments(g.comments || [], 'growth', g.id)}
-              ${renderCommentInput('growth', g.id)}
-            </div>
-          </div>
+function renderGrowthItem(g, isDetail) {
+  const user = profiles.find(p => p.id === g.created_by);
+  const liked = (g.liked_by || []).includes(currentUser?.id);
+  const media = (typeof g.media === 'string' ? JSON.parse(g.media) : g.media) || [];
+  return `
+    <div class="timeline-item" data-child="${g.child_id}" data-type="${g.type}">
+      <div class="timeline-dot ${g.type === 'photo' ? 'photo' : g.type === 'milestone' ? 'milestone' : ''}"></div>
+      <div class="timeline-content">
+        <div class="timeline-date">${g.date} · 👧 ${g.child_name}${user ? ` · by ${user.name}` : ''}</div>
+        <div class="timeline-title">${g.type === 'photo' ? '🖼️ ' : g.type === 'video' ? '🎬 ' : '🌟 '}${g.title}</div>
+        <div class="timeline-desc">${g.description || ''}</div>
+        ${media.length > 0 ? `<div class="timeline-media">${media.map(m => m.type === 'video' ? `<video src="${m.url}" controls style="width:120px;height:120px;object-fit:cover;border-radius:10px;"></video>` : `<img src="${m.url}" onclick="event.stopPropagation();viewMedia('${m.url}','image')" loading="lazy">`).join('')}</div>` : ''}
+        <div style="display:flex;gap:16px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+          <button class="msg-action ${liked ? 'liked' : ''}" onclick="event.stopPropagation();toggleLike('growth','${g.id}')">❤️ <span>${g.likes || 0}</span></button>
+          <button class="msg-action" onclick="event.stopPropagation();toggleComments('${g.id}','growth')">💬 <span>${(g.comments || []).length}</span></button>
+          ${canDelete(g.created_by) ? `<button class="msg-action" onclick="event.stopPropagation();deleteItem('growth','${g.id}')">🗑️</button>` : ''}
         </div>
-      `).join('')}
-    </div>` : `<div class="empty-state"><div class="empty-icon">📸</div><h3>还没有成长记录</h3><p>${canManage() ? '点击"添加记录"开始记录孩子们的成长瞬间吧' : '目前还没有可查看的成长记录'}</p></div>`}
+        <div id="comments-growth-${g.id}" style="display:none;margin-top:12px;">
+          ${renderCommentsList(g.comments || [], 'growth', g.id)}
+          ${renderCommentInput('growth', g.id)}
+        </div>
+      </div>
+    </div>
   `;
 }
 
@@ -1603,329 +864,256 @@ function filterGrowth() {
   const childId = document.getElementById('growthFilter')?.value || '';
   const type = document.getElementById('growthTypeFilter')?.value || '';
   document.querySelectorAll('.timeline-item').forEach(el => {
-    const matchChild = !childId || el.dataset.child === childId;
-    const matchType = !type || el.dataset.type === type;
-    el.style.display = matchChild && matchType ? '' : 'none';
+    el.style.display = (!childId || el.dataset.child === childId) && (!type || el.dataset.type === type) ? '' : 'none';
   });
 }
 
-/* ================================================================
-   MESSAGES PAGE
-   ================================================================ */
+// ================================================================
+// MESSAGES PAGE
+// ================================================================
 function renderMessages() {
   pageTitle.textContent = '寄语祝福';
   updateAddButton();
-  const sorted = [...messages].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  contentEl.innerHTML = `
-    ${sorted.length > 0 ? sorted.map(m => `
-      <div class="msg-card" style="margin-bottom:16px;">
-        <div class="msg-header">
-          <div class="msg-avatar" style="background:${m.avatarColor || '#E8915C'};">${m.author.charAt(0)}</div>
-          <div>
-            <div class="msg-author">
-              ${m.author}
-              ${m.authorId ? `<span class="role-tag ${(users.find(u=>u.id===m.authorId)||{}).role||''}" style="margin-left:6px;">${ROLE_ICONS[(users.find(u=>u.id===m.authorId)||{}).role]||''} ${ROLE_LABELS[(users.find(u=>u.id===m.authorId)||{}).role]||''}</span>` : ''}
-            </div>
-            <div class="msg-time">${m.date}</div>
-          </div>
-        </div>
-        ${m.toChild ? `<span class="msg-to">致：${m.toChild}</span>` : ''}
-        <div class="msg-content">${m.content}</div>
-        <div class="msg-actions">
-          <button class="msg-action ${(m.likedBy||[]).includes(currentUser.id) ? 'liked' : ''}" onclick="toggleLikeMsg('${m.id}')">❤️ <span>${m.likes || 0}</span></button>
-          <button class="msg-action" onclick="toggleMsgComments('${m.id}')">💬 <span>${(m.comments || []).length}</span></button>
-          ${canDelete(m.authorId) ? `<button class="msg-action" onclick="deleteMessage('${m.id}')">🗑️</button>` : ''}
-        </div>
-        <div id="msgComments-${m.id}" style="display:none;margin-top:12px;">
-          ${renderComments(m.comments || [], 'message', m.id)}
-          ${renderCommentInput('message', m.id)}
-        </div>
+  contentEl.innerHTML = messages.length > 0 ? messages.map(m => {
+    const mUser = profiles.find(p => p.id === m.author_id);
+    const liked = (m.liked_by || []).includes(currentUser?.id);
+    return `
+    <div class="msg-card" style="margin-bottom:16px;">
+      <div class="msg-header">
+        <div class="msg-avatar" style="background:${m.avatar_color || '#E8915C'};">${m.author.charAt(0)}</div>
+        <div><div class="msg-author">${m.author}${mUser ? `<span class="role-tag ${mUser.role}" style="margin-left:6px;">${ROLE_ICONS[mUser.role]} ${ROLE_LABELS[mUser.role]}</span>` : ''}</div><div class="msg-time">${m.date}</div></div>
       </div>
-    `).join('') : `<div class="empty-state"><div class="empty-icon">💌</div><h3>还没有寄语</h3><p>写下对孩子们的祝福和鼓励吧</p></div>`}
-  `;
+      ${m.to_child ? `<span class="msg-to">致：${m.to_child}</span>` : ''}
+      <div class="msg-content">${m.content}</div>
+      <div class="msg-actions">
+        <button class="msg-action ${liked ? 'liked' : ''}" onclick="toggleLike('message','${m.id}')">❤️ <span>${m.likes || 0}</span></button>
+        <button class="msg-action" onclick="toggleComments('${m.id}','message')">💬 <span>${(m.comments || []).length}</span></button>
+        ${canDelete(m.author_id) ? `<button class="msg-action" onclick="deleteItem('message','${m.id}')">🗑️</button>` : ''}
+      </div>
+      <div id="comments-message-${m.id}" style="display:none;margin-top:12px;">
+        ${renderCommentsList(m.comments || [], 'message', m.id)}
+        ${renderCommentInput('message', m.id)}
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty-state"><div class="empty-icon">💌</div><h3>还没有寄语</h3></div>';
 }
 
-/* ================================================================
-   QA PAGE
-   ================================================================ */
+// ================================================================
+// QA PAGE
+// ================================================================
 function renderQA() {
   pageTitle.textContent = '问答互动';
-  globalAddBtn.style.display = '';
-  globalAddBtn.textContent = '+ 提问';
-  const sorted = [...qaPosts].sort((a, b) => new Date(b.date) - new Date(a.date));
-
+  globalAddBtn.style.display = ''; globalAddBtn.textContent = '+ 提问';
   contentEl.innerHTML = `
     <div class="tabs">
       <button class="tab active" onclick="filterQA('all', this)">全部</button>
       <button class="tab" onclick="filterQA('student', this)">🎒 小学生提问</button>
       <button class="tab" onclick="filterQA('volunteer', this)">🎓 大学生提问</button>
     </div>
-
-    ${sorted.length > 0 ? sorted.map(q => `
+    ${qaPosts.length > 0 ? qaPosts.map(q => {
+      const qUser = profiles.find(p => p.id === q.author_id);
+      const liked = (q.liked_by || []).includes(currentUser?.id);
+      return `
       <div class="qa-card" style="margin-bottom:16px;" data-qa-role="${q.role}">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-          <span class="qa-badge ${q.role === 'student' ? 'student' : 'volunteer'}">${q.role === 'student' ? '🎒 小学生提问' : '🎓 大学生提问'}</span>
+          <span class="qa-badge ${q.role}">${q.role === 'student' ? '🎒 小学生提问' : '🎓 大学生提问'}</span>
           <span style="font-size:12px;color:var(--text-secondary);">${q.author} · ${q.date}</span>
-          ${q.authorId ? `<span class="role-tag ${(users.find(u=>u.id===q.authorId)||{}).role||''}">${ROLE_ICONS[(users.find(u=>u.id===q.authorId)||{}).role]||''}</span>` : ''}
+          ${qUser ? `<span class="role-tag ${qUser.role}">${ROLE_ICONS[qUser.role]}</span>` : ''}
         </div>
         <div class="qa-title">${q.title}</div>
-        <div class="qa-content">${q.content}</div>
+        <div class="qa-content">${q.content || ''}</div>
         <div style="display:flex;gap:16px;margin-top:12px;">
-          <button class="msg-action ${(q.likedBy||[]).includes(currentUser.id) ? 'liked' : ''}" onclick="toggleLikeQA('${q.id}')">❤️ <span>${q.likes || 0}</span></button>
+          <button class="msg-action ${liked ? 'liked' : ''}" onclick="toggleLike('qa','${q.id}')">❤️ <span>${q.likes || 0}</span></button>
           <button class="msg-action" onclick="toggleAnswerInput('${q.id}')">✏️ 回答</button>
-          ${canDelete(q.authorId) ? `<button class="msg-action" onclick="deleteQA('${q.id}')">🗑️</button>` : ''}
+          ${canDelete(q.author_id) ? `<button class="msg-action" onclick="deleteItem('qa','${q.id}')">🗑️</button>` : ''}
         </div>
         <div id="answerInput-${q.id}" style="display:none;margin-top:12px;">
-          ${renderAnswerInput(q.id)}
+          <textarea class="form-textarea" id="answerText-${q.id}" placeholder="写下你的回答..." style="min-height:60px;font-size:13px;"></textarea>
+          <div class="form-hint">将以 ${currentProfile.name} 的身份回答</div>
+          <button class="btn btn-primary btn-sm" onclick="addAnswer('${q.id}')" style="margin-top:8px;">提交回答</button>
         </div>
-        ${q.answers && q.answers.length > 0 ? `
-          <div class="qa-answers">
-            ${q.answers.map(a => `
-              <div class="qa-answer">
-                <div class="qa-answer-header">
-                  <span style="font-weight:600;font-size:13px;">${a.author}</span>
-                  ${a.authorId ? `<span class="role-tag ${(users.find(u=>u.id===a.authorId)||{}).role||''}" style="font-size:10px;">${ROLE_LABELS[(users.find(u=>u.id===a.authorId)||{}).role]||''}</span>` : ''}
-                  <span style="font-size:11px;color:var(--text-secondary);">${a.date}</span>
-                  <button class="msg-action" style="margin-left:auto;" onclick="toggleLikeAnswer('${q.id}','${a.id}')">❤️ ${a.likes || 0}</button>
-                </div>
-                <div class="qa-answer-text">${a.text}</div>
-              </div>
-            `).join('')}
-          </div>
-        ` : '<div style="margin-top:12px;font-size:13px;color:var(--text-secondary);">🤔 还没有回答，快来回答吧</div>'}
-      </div>
-    `).join('') : `<div class="empty-state"><div class="empty-icon">💬</div><h3>还没有问答</h3><p>大学生和小学生都可以在这里提问和回答</p></div>`}
+        ${q.answers && q.answers.length > 0 ? `<div class="qa-answers">${q.answers.map(a => {
+          const aUser = profiles.find(p => p.id === a.author_id);
+          return `
+          <div class="qa-answer">
+            <div class="qa-answer-header">
+              <span style="font-weight:600;font-size:13px;">${a.author}</span>
+              ${aUser ? `<span class="role-tag ${aUser.role}" style="font-size:10px;">${ROLE_LABELS[aUser.role]}</span>` : ''}
+              <span style="font-size:11px;color:var(--text-secondary);">${a.date || ''}</span>
+              <button class="msg-action" style="margin-left:auto;" onclick="event.stopPropagation();toggleLikeAnswer('${q.id}','${a.id}')">❤️ ${a.likes || 0}</button>
+            </div>
+            <div class="qa-answer-text">${a.text}</div>
+          </div>`;
+        }).join('')}</div>` : '<div style="margin-top:12px;font-size:13px;color:var(--text-secondary);">🤔 还没有回答</div>'}
+      </div>`;
+    }).join('') : '<div class="empty-state"><div class="empty-icon">💬</div><h3>还没有问答</h3></div>'}
   `;
 }
 
 function filterQA(role, btn) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  document.querySelectorAll('[data-qa-role]').forEach(el => {
-    el.style.display = role === 'all' || el.dataset.qaRole === role ? '' : 'none';
-  });
+  document.querySelectorAll('[data-qa-role]').forEach(el => el.style.display = role === 'all' || el.dataset.qaRole === role ? '' : 'none');
 }
 
-/* ================================================================
-   COMMENT RENDERING
-   ================================================================ */
-function renderComments(comments, type, parentId) {
+// ================================================================
+// COMMENTS RENDERING
+// ================================================================
+function renderCommentsList(comments, type, parentId) {
   if (!comments || comments.length === 0) return '<div style="font-size:13px;color:var(--text-secondary);padding:8px 0;">暂无评论</div>';
   return comments.map(c => `
     <div class="comment-item">
       <div class="comment-avatar">${c.author.charAt(0)}</div>
-      <div class="comment-body">
-        <div class="comment-author">${c.author}</div>
-        <div class="comment-text">${c.text}</div>
-        <div class="comment-time">${c.date || ''}</div>
-      </div>
+      <div class="comment-body"><div class="comment-author">${c.author}</div><div class="comment-text">${c.text}</div><div class="comment-time">${c.date || ''}</div></div>
     </div>
   `).join('');
 }
 
 function renderCommentInput(type, parentId) {
-  return `
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <input class="form-input" id="commentInput-${type}-${parentId}" placeholder="写评论..." style="flex:1;font-size:13px;">
-      <button class="btn btn-primary btn-sm" onclick="addComment('${type}','${parentId}')">发送</button>
-    </div>
-  `;
+  return `<div style="display:flex;gap:8px;margin-top:8px;"><input class="form-input" id="commentInput-${type}-${parentId}" placeholder="写评论..." style="flex:1;font-size:13px;"><button class="btn btn-primary btn-sm" onclick="addComment('${type}','${parentId}')">发送</button></div>`;
 }
 
-function renderAnswerInput(qaId) {
-  return `
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <textarea class="form-textarea" id="answerText-${qaId}" placeholder="写下你的回答..." style="min-height:60px;font-size:13px;"></textarea>
-      <div class="form-hint">将以 ${currentUser.name}（${ROLE_LABELS[currentUser.role]}）的身份回答</div>
-      <button class="btn btn-primary btn-sm" onclick="addAnswer('${qaId}')" style="align-self:flex-end;">提交回答</button>
-    </div>
-  `;
-}
-
-/* ================================================================
-   INTERACTIONS — Likes & Comments
-   ================================================================ */
-function toggleLike(type, id) {
-  let arr, key;
-  if (type === 'growth') { arr = growthRecords; key = 'growth'; }
-  else if (type === 'message') { arr = messages; key = 'messages'; }
-  else if (type === 'qa') { arr = qaPosts; key = 'qa'; }
+// ================================================================
+// INTERACTIONS
+// ================================================================
+async function toggleLike(type, id) {
+  let table, item;
+  if (type === 'growth') { table = 'growth_records'; item = growthRecords.find(r => r.id === id); }
+  else if (type === 'message') { table = 'messages'; item = messages.find(m => m.id === id); }
+  else if (type === 'qa') { table = 'qa_posts'; item = qaPosts.find(q => q.id === id); }
   else return;
-
-  const item = arr.find(r => r.id === id);
   if (!item) return;
-  item.likedBy = item.likedBy || [];
-  const idx = item.likedBy.indexOf(currentUser.id);
-  if (idx >= 0) { item.likedBy.splice(idx, 1); item.likes = Math.max(0, (item.likes||0) - 1); }
-  else { item.likedBy.push(currentUser.id); item.likes = (item.likes||0) + 1; }
-  saveData(key, arr);
+
+  const likedBy = item.liked_by || [];
+  const idx = likedBy.indexOf(currentUser.id);
+  if (idx >= 0) { likedBy.splice(idx, 1); item.likes = Math.max(0, (item.likes || 0) - 1); }
+  else { likedBy.push(currentUser.id); item.likes = (item.likes || 0) + 1; }
+
+  await supabase.from(table).update({ likes: item.likes, liked_by: likedBy }).eq('id', id);
   render();
 }
 
-function toggleLikeGrowth(id) { toggleLike('growth', id); }
-function toggleLikeMsg(id) { toggleLike('message', id); }
-function toggleLikeQA(id) { toggleLike('qa', id); }
-
-function toggleLikeAnswer(qaId, answerId) {
-  const qa = qaPosts.find(q => q.id === qaId);
-  if (!qa) return;
-  const answer = qa.answers.find(a => a.id === answerId);
+async function toggleLikeAnswer(qaId, answerId) {
+  const answer = qaPosts.find(q => q.id === qaId)?.answers?.find(a => a.id === answerId);
   if (!answer) return;
   answer.likes = (answer.likes || 0) + 1;
-  saveData('qa', qaPosts);
+  await supabase.from('qa_answers').update({ likes: answer.likes }).eq('id', answerId);
   render();
 }
 
-function toggleGrowthComments(id) {
-  const el = document.getElementById('growthComments-' + id);
+function toggleComments(id, type) {
+  const el = document.getElementById(`comments-${type}-${id}`);
   if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
-function toggleMsgComments(id) {
-  const el = document.getElementById('msgComments-' + id);
-  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
+
 function toggleAnswerInput(id) {
   const el = document.getElementById('answerInput-' + id);
   if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
-function addComment(type, parentId) {
+async function addComment(type, parentId) {
   const input = document.getElementById(`commentInput-${type}-${parentId}`);
   if (!input || !input.value.trim()) return;
-  const comment = {
-    id: genId(),
-    author: currentUser.name,
-    authorId: currentUser.id,
-    text: input.value.trim(),
-    date: new Date().toISOString().slice(0, 10)
-  };
-
-  if (type === 'growth') {
-    const record = growthRecords.find(r => r.id === parentId);
-    if (record) { record.comments = record.comments || []; record.comments.push(comment); saveData('growth', growthRecords); }
-  } else if (type === 'message') {
-    const msg = messages.find(m => m.id === parentId);
-    if (msg) { msg.comments = msg.comments || []; msg.comments.push(comment); saveData('messages', messages); }
-  }
+  await supabase.from('comments').insert({
+    parent_type: type, parent_id: parentId,
+    author: currentProfile.name, author_id: currentUser.id,
+    text: input.value.trim(), date: new Date().toISOString().slice(0, 10)
+  });
   render();
   showToast('评论发送成功', 'success');
 }
 
-function addAnswer(qaId) {
+async function addAnswer(qaId) {
   const textInput = document.getElementById(`answerText-${qaId}`);
   if (!textInput || !textInput.value.trim()) return;
-  const qa = qaPosts.find(q => q.id === qaId);
-  if (!qa) return;
-  qa.answers = qa.answers || [];
-  qa.answers.push({
-    id: genId(),
-    author: currentUser.name,
-    authorId: currentUser.id,
-    text: textInput.value.trim(),
-    date: new Date().toISOString().slice(0, 10),
-    likes: 0
+  await supabase.from('qa_answers').insert({
+    post_id: qaId, author: currentProfile.name, author_id: currentUser.id,
+    text: textInput.value.trim(), date: new Date().toISOString().slice(0, 10), likes: 0
   });
-  saveData('qa', qaPosts);
   render();
   showToast('回答提交成功', 'success');
 }
 
-/* ================================================================
-   MEDIA VIEWER
-   ================================================================ */
+// ================================================================
+// DELETE
+// ================================================================
+async function deleteItem(type, id) {
+  if (!confirm('确定要删除吗？')) return;
+  const map = { growth: 'growth_records', message: 'messages', qa: 'qa_posts' };
+  const table = map[type];
+  if (table) await supabase.from(table).delete().eq('id', id);
+  render();
+  showToast('已删除', 'success');
+}
+
+async function deleteChild(id) {
+  if (!canManage()) { showToast('没有权限', 'error'); return; }
+  if (!confirm('确定删除？相关记录也会被删除。')) return;
+  await supabase.from('children').delete().eq('id', id);
+  render();
+  showToast('已删除', 'success');
+}
+
+// ================================================================
+// MEDIA VIEWER
+// ================================================================
 function viewMedia(url, type) {
   const viewer = document.createElement('div');
   viewer.className = 'media-viewer';
-  viewer.innerHTML = type === 'video'
-    ? `<video src="${url}" controls autoplay style="max-width:90vw;max-height:90vh;border-radius:8px;"></video>`
-    : `<img src="${url}" style="max-width:90vw;max-height:90vh;border-radius:8px;">`;
+  viewer.innerHTML = type === 'video' ? `<video src="${url}" controls autoplay style="max-width:90vw;max-height:90vh;border-radius:8px;"></video>` : `<img src="${url}" style="max-width:90vw;max-height:90vh;border-radius:8px;">`;
   viewer.addEventListener('click', () => viewer.remove());
   document.body.appendChild(viewer);
 }
 
-/* ================================================================
-   MODALS — Add/Edit
-   ================================================================ */
+// ================================================================
+// MODALS
+// ================================================================
 function showModal(title, bodyHTML, onSave) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
     <div class="modal">
-      <div class="modal-header">
-        <h2>${title}</h2>
-        <button class="modal-close">✕</button>
-      </div>
+      <div class="modal-header"><h2>${title}</h2><button class="modal-close">✕</button></div>
       <div class="modal-body">${bodyHTML}</div>
       <div style="padding:0 24px 24px;display:flex;gap:10px;justify-content:flex-end;">
         <button class="btn btn-outline btn-sm" id="modalCancel">取消</button>
         <button class="btn btn-primary btn-sm" id="modalSave">保存</button>
       </div>
-    </div>
-  `;
+    </div>`;
   document.body.appendChild(overlay);
-
   const close = () => overlay.remove();
   overlay.querySelector('.modal-close').addEventListener('click', close);
   overlay.querySelector('#modalCancel').addEventListener('click', close);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-
-  overlay.querySelector('#modalSave').addEventListener('click', () => {
-    const result = onSave(overlay);
-    if (result !== false) close();
-  });
+  overlay.querySelector('#modalSave').addEventListener('click', () => { const r = onSave(overlay); if (r !== false) close(); });
 }
 
 function showAddChildModal(editChildData = null) {
   const isEdit = !!editChildData;
   const c = editChildData || {};
   showModal(isEdit ? '编辑孩子信息' : '添加孩子', `
-    <div class="form-group">
-      <label class="form-label">姓名</label>
-      <input class="form-input" id="childName" value="${c.name || ''}" placeholder="孩子的姓名">
-    </div>
-    <div class="form-group">
-      <label class="form-label">年龄</label>
-      <input class="form-input" id="childAge" type="number" value="${c.age || ''}" placeholder="年龄" min="5" max="16">
-    </div>
-    <div class="form-group">
-      <label class="form-label">年级</label>
-      <input class="form-input" id="childGrade" value="${c.grade || ''}" placeholder="如：三年级">
-    </div>
-    <div class="form-group">
-      <label class="form-label">简介</label>
-      <textarea class="form-textarea" id="childDesc" placeholder="简短描述孩子的性格、兴趣爱好等">${c.desc || ''}</textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">头像照片</label>
-      <input type="file" id="childAvatar" accept="image/*" style="display:block;font-size:13px;">
-      <div class="form-hint">可选，支持 jpg/png 格式</div>
-    </div>
-  `, (overlay) => {
+    <div class="form-group"><label class="form-label">姓名</label><input class="form-input" id="childName" value="${c.name || ''}" placeholder="孩子姓名"></div>
+    <div class="form-group"><label class="form-label">年龄</label><input class="form-input" id="childAge" type="number" value="${c.age || ''}" placeholder="年龄" min="5" max="16"></div>
+    <div class="form-group"><label class="form-label">年级</label><input class="form-input" id="childGrade" value="${c.grade || ''}" placeholder="如：三年级"></div>
+    <div class="form-group"><label class="form-label">简介</label><textarea class="form-textarea" id="childDesc" placeholder="孩子的性格、兴趣爱好等">${c.description || ''}</textarea></div>
+    <div class="form-group"><label class="form-label">头像照片</label><input type="file" id="childAvatar" accept="image/*" style="display:block;font-size:13px;"></div>
+  `, async (overlay) => {
     const name = overlay.querySelector('#childName').value.trim();
-    const age = parseInt(overlay.querySelector('#childAge').value);
+    const age = parseInt(overlay.querySelector('#childAge').value) || 8;
     const grade = overlay.querySelector('#childGrade').value.trim();
     const desc = overlay.querySelector('#childDesc').value.trim();
     if (!name) { showToast('请输入孩子姓名', 'error'); return false; }
-
     const fileInput = overlay.querySelector('#childAvatar');
-    const processSave = (avatarUrl = '') => {
+    const save = async (avatarUrl = '') => {
       if (isEdit) {
-        const idx = children.findIndex(ch => ch.id === c.id);
-        if (idx >= 0) { children[idx] = { ...children[idx], name, age, grade, desc, avatar: avatarUrl || children[idx].avatar }; }
+        await supabase.from('children').update({ name, age, grade, description: desc, avatar: avatarUrl || c.avatar }).eq('id', c.id);
       } else {
-        children.push({ id: genId(), name, age, grade, desc, avatar: avatarUrl, joinDate: new Date().toISOString().slice(0, 10), createdBy: currentUser.id });
+        await supabase.from('children').insert({ name, age, grade, description: desc, avatar: avatarUrl, join_date: new Date().toISOString().slice(0, 10), created_by: currentUser.id });
       }
-      saveData('children', children);
       render();
       showToast(isEdit ? '信息已更新' : '孩子已添加', 'success');
     };
-
-    if (fileInput.files[0]) {
-      compressImage(fileInput.files[0], 200, 200, (dataUrl) => processSave(dataUrl));
-    } else {
-      processSave();
-    }
+    if (fileInput.files[0]) { compressImage(fileInput.files[0], 200, 200, save); } else { save(); }
   });
 }
 
@@ -1934,201 +1122,176 @@ function editChild(id) {
   if (child && canManage()) showAddChildModal(child);
 }
 
-function deleteChild(id) {
-  if (!canManage()) { showToast('没有权限删除', 'error'); return; }
-  if (!confirm('确定要删除这个孩子的档案吗？相关的成长记录也会被删除。')) return;
-  children = children.filter(c => c.id !== id);
-  growthRecords = growthRecords.filter(g => g.childId !== id);
-  saveData('children', children);
-  saveData('growth', growthRecords);
-  showToast('已删除', 'success');
-  navigate('children');
-}
-
 function showAddGrowthModal(childId = '') {
-  if (!canManage()) { showToast('没有权限添加成长记录', 'error'); return; }
+  if (!canManage()) { showToast('没有权限', 'error'); return; }
   showModal('添加成长记录', `
-    <div class="form-group">
-      <label class="form-label">孩子</label>
-      <select class="form-select" id="growthChild">
-        <option value="">选择孩子</option>
-        ${children.map(c => `<option value="${c.id}" ${c.id === childId ? 'selected' : ''}>${c.name}</option>`).join('')}
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">类型</label>
-      <select class="form-select" id="growthType">
-        <option value="photo">🖼️ 照片</option>
-        <option value="video">🎬 视频</option>
-        <option value="milestone">🌟 里程碑</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">标题</label>
-      <input class="form-input" id="growthTitle" placeholder="给这个记录起个标题">
-    </div>
-    <div class="form-group">
-      <label class="form-label">描述</label>
-      <textarea class="form-textarea" id="growthDesc" placeholder="描述这个成长瞬间..."></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">日期</label>
-      <input class="form-input" type="date" id="growthDate" value="${new Date().toISOString().slice(0,10)}">
-    </div>
-    <div class="form-group">
-      <label class="form-label">上传照片/视频</label>
-      <input type="file" id="growthMedia" accept="image/*,video/*" multiple style="display:block;font-size:13px;">
-      <div class="form-hint">可多选，照片会被压缩存储，视频建议小于10MB</div>
-    </div>
-  `, (overlay) => {
+    <div class="form-group"><label class="form-label">孩子</label><select class="form-select" id="growthChild"><option value="">选择孩子</option>${children.map(c => `<option value="${c.id}" ${c.id === childId ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div>
+    <div class="form-group"><label class="form-label">类型</label><select class="form-select" id="growthType"><option value="photo">🖼️ 照片</option><option value="video">🎬 视频</option><option value="milestone">🌟 里程碑</option></select></div>
+    <div class="form-group"><label class="form-label">标题</label><input class="form-input" id="growthTitle" placeholder="给这个记录起个标题"></div>
+    <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="growthDesc" placeholder="描述这个成长瞬间..."></textarea></div>
+    <div class="form-group"><label class="form-label">日期</label><input class="form-input" type="date" id="growthDate" value="${new Date().toISOString().slice(0,10)}"></div>
+    <div class="form-group"><label class="form-label">上传照片/视频</label><input type="file" id="growthMedia" accept="image/*,video/*" multiple style="display:block;font-size:13px;"></div>
+  `, async (overlay) => {
     const childIdVal = overlay.querySelector('#growthChild').value;
     const type = overlay.querySelector('#growthType').value;
     const title = overlay.querySelector('#growthTitle').value.trim();
     const desc = overlay.querySelector('#growthDesc').value.trim();
     const date = overlay.querySelector('#growthDate').value;
     if (!childIdVal || !title) { showToast('请填写完整信息', 'error'); return false; }
-
     const child = children.find(c => c.id === childIdVal);
     const files = overlay.querySelector('#growthMedia').files;
-
-    const saveRecord = (mediaUrls = []) => {
-      growthRecords.push({
-        id: genId(), childId: childIdVal, childName: child ? child.name : '',
-        date, type, title, desc, media: mediaUrls, likes: 0, likedBy: [], comments: [],
-        createdBy: currentUser.id
-      });
-      saveData('growth', growthRecords);
-      render();
-      showToast('成长记录已添加', 'success');
+    const save = async (mediaUrls = []) => {
+      await supabase.from('growth_records').insert({ child_id: childIdVal, child_name: child?.name || '', date, type, title, description: desc, media: mediaUrls, likes: 0, liked_by: [], created_by: currentUser.id });
+      render(); showToast('成长记录已添加', 'success');
     };
-
     if (files.length > 0) {
-      const mediaItems = [];
-      let processed = 0;
+      const mediaItems = []; let processed = 0;
       Array.from(files).forEach(file => {
         if (file.type.startsWith('image/')) {
-          compressImage(file, 800, 800, (dataUrl) => {
-            mediaItems.push({ type: 'image', url: dataUrl });
-            processed++;
-            if (processed === files.length) saveRecord(mediaItems);
-          });
-        } else {
-          mediaItems.push({ type: 'video', url: URL.createObjectURL(file) });
-          processed++;
-          if (processed === files.length) saveRecord(mediaItems);
-        }
+          compressImage(file, 800, 800, (dataUrl) => { mediaItems.push({ type: 'image', url: dataUrl }); processed++; if (processed === files.length) save(mediaItems); });
+        } else { mediaItems.push({ type: 'video', url: URL.createObjectURL(file) }); processed++; if (processed === files.length) save(mediaItems); }
       });
-    } else {
-      saveRecord();
-    }
+    } else { save(); }
   });
-}
-
-function deleteGrowth(id) {
-  const record = growthRecords.find(g => g.id === id);
-  if (!canDelete(record?.createdBy)) { showToast('没有权限删除', 'error'); return; }
-  if (!confirm('确定删除这条成长记录？')) return;
-  growthRecords = growthRecords.filter(g => g.id !== id);
-  saveData('growth', growthRecords);
-  render();
-  showToast('已删除', 'success');
 }
 
 function showAddMessageModal() {
-  if (!canWriteMessage()) { showToast('孩子角色不能写寄语', 'error'); return; }
+  if (!canWriteMessage()) { showToast('没有权限', 'error'); return; }
   showModal('写寄语', `
-    <div class="form-group">
-      <label class="form-label">你的名字</label>
-      <input class="form-input" id="msgAuthor" value="${currentUser.name}" readonly style="background:#f5f5f5;">
-      <div class="form-hint">将以当前登录身份发送</div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">致哪位孩子（可选）</label>
-      <select class="form-select" id="msgToChild">
-        <option value="">全体孩子</option>
-        ${children.map(c => `<option value="${c.name}">${c.name}</option>`).join('')}
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">寄语内容</label>
-      <textarea class="form-textarea" id="msgContent" placeholder="写下你想对孩子们说的话..." style="min-height:120px;"></textarea>
-    </div>
-  `, (overlay) => {
-    const author = overlay.querySelector('#msgAuthor').value.trim();
+    <div class="form-group"><label class="form-label">致哪位孩子（可选）</label><select class="form-select" id="msgToChild"><option value="">全体孩子</option>${children.map(c => `<option value="${c.name}">${c.name}</option>`).join('')}</select></div>
+    <div class="form-group"><label class="form-label">寄语内容</label><textarea class="form-textarea" id="msgContent" placeholder="写下你想对孩子们说的话..." style="min-height:120px;"></textarea></div>
+    <div class="form-hint">将以 ${currentProfile.name} 的身份发送</div>
+  `, async (overlay) => {
     const toChild = overlay.querySelector('#msgToChild').value;
     const content = overlay.querySelector('#msgContent').value.trim();
     if (!content) { showToast('请输入寄语内容', 'error'); return false; }
-
-    messages.push({
-      id: genId(), author, authorId: currentUser.id, avatarColor: currentUser.avatarColor,
-      toChild, content, date: new Date().toISOString().slice(0, 10), likes: 0, likedBy: [], comments: []
-    });
-    saveData('messages', messages);
-    render();
-    showToast('寄语已发送', 'success');
+    await supabase.from('messages').insert({ author: currentProfile.name, author_id: currentUser.id, avatar_color: currentProfile.avatar_color, to_child: toChild, content, date: new Date().toISOString().slice(0, 10), likes: 0, liked_by: [] });
+    render(); showToast('寄语已发送', 'success');
   });
 }
 
-function deleteMessage(id) {
-  const msg = messages.find(m => m.id === id);
-  if (!canDelete(msg?.authorId)) { showToast('没有权限删除', 'error'); return; }
-  if (!confirm('确定删除这条寄语？')) return;
-  messages = messages.filter(m => m.id !== id);
-  saveData('messages', messages);
-  render();
-  showToast('已删除', 'success');
-}
-
 function showAddQAModal() {
-  const roleOptions = currentUser.role === 'child'
-    ? `<option value="student" selected>🎒 小学生提问</option>`
-    : currentUser.role === 'volunteer' || currentUser.role === 'teacher'
-      ? `<option value="volunteer">🎓 大学生提问</option><option value="student">🎒 代小学生提问</option>`
-      : `<option value="student">🎒 小学生提问</option><option value="volunteer">🎓 大学生提问</option>`;
-
+  const roleOpts = currentProfile.role === 'child' ? '<option value="student">🎒 小学生提问</option>' : '<option value="volunteer">🎓 大学生提问</option><option value="student">🎒 小学生提问</option>';
   showModal('发布问题', `
-    <div class="form-group">
-      <label class="form-label">提问身份</label>
-      <select class="form-select" id="qaRole">${roleOptions}</select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">问题标题</label>
-      <input class="form-input" id="qaTitle" placeholder="简短概括你的问题">
-    </div>
-    <div class="form-group">
-      <label class="form-label">问题详情</label>
-      <textarea class="form-textarea" id="qaContent" placeholder="详细描述你的问题..." style="min-height:100px;"></textarea>
-    </div>
-    <div class="form-hint">将以 ${currentUser.name}（${ROLE_LABELS[currentUser.role]}）的身份发布</div>
-  `, (overlay) => {
+    <div class="form-group"><label class="form-label">提问身份</label><select class="form-select" id="qaRole">${roleOpts}</select></div>
+    <div class="form-group"><label class="form-label">问题标题</label><input class="form-input" id="qaTitle" placeholder="简短概括你的问题"></div>
+    <div class="form-group"><label class="form-label">问题详情</label><textarea class="form-textarea" id="qaContent" placeholder="详细描述你的问题..." style="min-height:100px;"></textarea></div>
+    <div class="form-hint">将以 ${currentProfile.name} 的身份发布</div>
+  `, async (overlay) => {
     const role = overlay.querySelector('#qaRole').value;
     const title = overlay.querySelector('#qaTitle').value.trim();
     const content = overlay.querySelector('#qaContent').value.trim();
     if (!title) { showToast('请输入问题标题', 'error'); return false; }
-
-    qaPosts.push({
-      id: genId(), author: currentUser.name, authorId: currentUser.id, role, title, content,
-      date: new Date().toISOString().slice(0, 10), answers: [], likes: 0, likedBy: []
-    });
-    saveData('qa', qaPosts);
-    render();
-    showToast('问题已发布', 'success');
+    await supabase.from('qa_posts').insert({ author: currentProfile.name, author_id: currentUser.id, role, title, content, date: new Date().toISOString().slice(0, 10), likes: 0, liked_by: [] });
+    render(); showToast('问题已发布', 'success');
   });
 }
 
-function deleteQA(id) {
-  const qa = qaPosts.find(q => q.id === id);
-  if (!canDelete(qa?.authorId)) { showToast('没有权限删除', 'error'); return; }
-  if (!confirm('确定删除这个问答？')) return;
-  qaPosts = qaPosts.filter(q => q.id !== id);
-  saveData('qa', qaPosts);
-  render();
-  showToast('已删除', 'success');
+// ================================================================
+// INIT DEMO DATA
+// ================================================================
+async function initDemoData() {
+  if (!canManage()) { showToast('仅老师/志愿者可操作', 'error'); return; }
+  if (!confirm('将创建 4 个演示账号和示例数据（孩子、成长记录、寄语、问答）。确定继续？')) return;
+
+  const btn = document.getElementById('initDemoBtn');
+  btn.disabled = true; btn.textContent = '初始化中...';
+
+  try {
+    // Create 4 demo users
+    const demoUsers = [
+      { email: 'volunteer_liu@shanhau.org', password: '123456', name: '刘志愿者', role: 'volunteer' },
+      { email: 'parent_zhang@shanhau.org', password: '123456', name: '小梅妈妈', role: 'parent' },
+      { email: 'child_xiaomei@shanhau.org', password: '123456', name: '王小梅', role: 'child' },
+    ];
+
+    const userIds = { volunteer: '', parent: '', child: '' };
+    for (const u of demoUsers) {
+      const { data, error } = await supabase.auth.signUp({ email: u.email, password: u.password });
+      if (!error && data.user) {
+        const { data: profile } = await supabase.from('profiles').insert({
+          id: data.user.id, username: u.email, name: u.name, role: u.role,
+          avatar_color: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
+          linked_children: u.role === 'parent' ? [] : []
+        }).select('id').single();
+        if (u.role === 'volunteer') userIds.volunteer = data.user.id;
+        else if (u.role === 'parent') userIds.parent = data.user.id;
+        else if (u.role === 'child') userIds.child = data.user.id;
+      }
+    }
+    // Update parent's linked children after children are created
+    await new Promise(r => setTimeout(r, 500));
+
+    // Insert children
+    const { data: newChildren } = await supabase.from('children').insert([
+      { name: '王小梅', age: 10, grade: '四年级', description: '性格开朗，喜欢画画和唱歌，是班上的文艺委员。家里有个弟弟，每天放学后帮忙做家务。', join_date: '2024-09-01', created_by: currentUser.id },
+      { name: '李浩然', age: 8, grade: '二年级', description: '活泼好动，对数学特别感兴趣，经常追着老师问问题。梦想是当一名科学家。', join_date: '2024-09-01', created_by: currentUser.id },
+      { name: '张小芳', age: 11, grade: '五年级', description: '文静乖巧，作文写得非常好，是语文课代表。喜欢读书，尤其喜欢童话故事。', join_date: '2024-09-01', created_by: currentUser.id },
+      { name: '陈强', age: 9, grade: '三年级', description: '班上的小班长，责任心强，乐于助人。喜欢体育运动，特别是足球和跑步。', join_date: '2024-09-01', created_by: currentUser.id },
+    ]).select();
+
+    if (newChildren && userIds.parent) {
+      // Link parent to child c1 (王小梅)
+      const c1 = newChildren.find(c => c.name === '王小梅');
+      if (c1) {
+        await supabase.from('profiles').update({ linked_children: [c1.id] }).eq('id', userIds.parent);
+      }
+    }
+    if (newChildren && userIds.child) {
+      const c1 = newChildren.find(c => c.name === '王小梅');
+      if (c1) {
+        await supabase.from('profiles').update({ linked_children: [c1.id] }).eq('id', userIds.child);
+      }
+    }
+
+    // Insert growth records
+    if (newChildren) {
+      const cMap = {};
+      newChildren.forEach(c => { cMap[c.name] = c.id; });
+      await supabase.from('growth_records').insert([
+        { child_id: cMap['王小梅'], child_name: '王小梅', date: '2024-10-15', type: 'photo', title: '第一次画水彩画', description: '美术课上，小梅第一次接触水彩，画了一幅山里的日出，色彩运用让人惊喜。', likes: 5, liked_by: [], created_by: currentUser.id },
+        { child_id: cMap['李浩然'], child_name: '李浩然', date: '2024-11-02', type: 'milestone', title: '数学竞赛获奖', description: '浩然参加镇上的数学竞赛，获得二年级组第二名。', likes: 8, liked_by: [], created_by: currentUser.id },
+        { child_id: cMap['张小芳'], child_name: '张小芳', date: '2024-12-20', type: 'photo', title: '作文比赛一等奖', description: '小芳的作文《山那边的世界》在县作文比赛中获得一等奖。', likes: 12, liked_by: [], created_by: currentUser.id },
+        { child_id: cMap['陈强'], child_name: '陈强', date: '2025-01-10', type: 'video', title: '运动会100米冠军', description: '学校运动会上，陈强以14秒夺得短跑冠军。', likes: 7, liked_by: [], created_by: currentUser.id },
+      ]);
+    }
+
+    // Insert messages
+    await new Promise(r => setTimeout(r, 300));
+    await supabase.from('messages').insert([
+      { author: '刘志愿者', author_id: userIds.volunteer || currentUser.id, avatar_color: '#5B7F9A', to_child: '王小梅', content: '小梅，你画的那幅《山里的日出》老师一直保存在手机里。你的色彩感特别好，希望你继续保持对画画的热爱，用画笔记录生活的美好。', date: '2024-12-01', likes: 3, liked_by: [] },
+      { author: currentProfile.name, author_id: currentUser.id, avatar_color: currentProfile.avatar_color, to_child: '', content: '看到孩子们在这么艰苦的条件下还这么努力地学习，真的很感动。希望你们都能实现自己的梦想，走出大山，看到更广阔的世界。', date: '2025-01-05', likes: 6, liked_by: [] },
+      { author: '小梅妈妈', author_id: userIds.parent || currentUser.id, avatar_color: '#5B9A6B', to_child: '王小梅', content: '小梅，妈妈看到你的画被老师表扬了，特别骄傲。只要你喜欢画画，妈妈一定支持你。好好学习，将来当一个画家！', date: '2025-02-14', likes: 9, liked_by: [] },
+    ]);
+
+    // Insert Q&A
+    await new Promise(r => setTimeout(r, 300));
+    const { data: qa1 } = await supabase.from('qa_posts').insert({ author: '刘志愿者', author_id: userIds.volunteer || currentUser.id, role: 'volunteer', title: '你们最喜欢的科目是什么？为什么？', content: '我很好奇在现在的课程中，大家最喜欢上什么课？', date: '2024-11-10', likes: 5, liked_by: [] }).select('id').single();
+    if (qa1) {
+      await supabase.from('qa_answers').insert([
+        { post_id: qa1.id, author: '王小梅', author_id: userIds.child || currentUser.id, text: '我最喜欢美术课，因为可以画画，画出心里想的东西。', date: '2024-11-11', likes: 4 },
+        { post_id: qa1.id, author: '李浩然', author_id: currentUser.id, text: '我最喜欢数学！解出难题特别开心，老师说数学好可以当科学家。', date: '2024-11-12', likes: 3 },
+      ]);
+    }
+    const { data: qa2 } = await supabase.from('qa_posts').insert({ author: '王小梅', author_id: userIds.child || currentUser.id, role: 'student', title: '大学是什么样子的？', content: '老师们都是从大学来的，我想知道大学里都学什么？', date: '2024-11-15', likes: 8, liked_by: [] }).select('id').single();
+    if (qa2) {
+      await supabase.from('qa_answers').insert({ post_id: qa2.id, author: '刘志愿者', author_id: userIds.volunteer || currentUser.id, text: '大学是一个很美好的地方！图书馆里有看不完的书，还有各种社团活动。加油学习，你一定能考上好大学！', date: '2024-11-16', likes: 7 });
+    }
+
+    // Re-login as current user (signUp switches session to last created user)
+    await supabase.auth.signInWithPassword({ email: currentUser.email, password: '123456' }).catch(() => {});
+
+    showToast('演示数据初始化成功！刷新后可用演示账号登录。', 'success');
+    setTimeout(() => render(), 500);
+  } catch (e) {
+    showToast('初始化出错: ' + e.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = '🎭 初始化演示数据';
 }
 
-/* ================================================================
-   UTILITY — Image Compression & Toast
-   ================================================================ */
+// ================================================================
+// UTILITY
+// ================================================================
 function compressImage(file, maxW, maxH, callback) {
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -2150,17 +1313,16 @@ function compressImage(file, maxW, maxH, callback) {
 function showToast(msg, type) {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = msg;
+  toast.className = `toast ${type}`; toast.textContent = msg;
   container.appendChild(toast);
   setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 2500);
 }
 
-/* ================================================================
-   KEYBOARD SHORTCUTS
-   ================================================================ */
+// ================================================================
+// KEYBOARD
+// ================================================================
 document.addEventListener('keydown', (e) => {
-  if (!currentUser) return; // Only active when logged in
+  if (!currentUser) return;
   if (e.ctrlKey || e.metaKey) {
     switch (e.key) {
       case '1': e.preventDefault(); navigate('home'); break;
@@ -2171,32 +1333,37 @@ document.addEventListener('keydown', (e) => {
     }
   }
   if (e.key === 'Escape') {
-    const modal = document.querySelector('.modal-overlay');
-    if (modal) modal.remove();
-    const viewer = document.querySelector('.media-viewer');
-    if (viewer) viewer.remove();
+    document.querySelector('.modal-overlay')?.remove();
+    document.querySelector('.media-viewer')?.remove();
     document.getElementById('userDropdown')?.classList.remove('open');
   }
 });
 
-// Prevent form submissions on Enter for auth forms
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
-    const form = e.target.closest('form');
-    if (form) {
-      e.preventDefault();
-      form.dispatchEvent(new Event('submit'));
-    }
+// ================================================================
+// INIT
+// ================================================================
+async function init() {
+  // Check for existing session
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+    if (profile) { currentProfile = profile; showApp(); } else { showAuthPage(); }
+  } else {
+    showAuthPage();
+  }
+}
+
+// Listen for auth state changes (for OAuth, etc.)
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') {
+    currentUser = null; currentProfile = null; showAuthPage();
   }
 });
 
-/* ================================================================
-   INIT
-   ================================================================ */
-initAuth();
-console.log('🌻 山花成长记 - 多角色平台已就绪');
-console.log('演示账号: teacher_wang | volunteer_liu | parent_zhang | child_xiaomei (密码: 123456)');
-console.log('快捷切换: Ctrl+1 首页 | Ctrl+2 孩子 | Ctrl+3 成长 | Ctrl+4 寄语 | Ctrl+5 问答');
+init();
+console.log('🌻 山花成长记 - 云端版已就绪');
+console.log('数据存储在 Supabase PostgreSQL，所有设备共享同一份数据');
 </script>
 </body>
 </html>
