@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>山花成长记 - 支教孩子成长记录</title>
-<script src="supabase.min.js"></script>
 <style>
 :root {
   --primary: #E8915C; --primary-dark: #D4784A; --primary-light: #FFF0E8;
@@ -362,7 +361,7 @@ body {
       </form>
       <div class="auth-info" style="margin-top:16px;">
         💡 <b>首次使用？</b>先用 <b>老师</b> 身份注册第一个账号，进入平台后点击"初始化演示数据"即可自动创建演示账号和示例内容。<br>
-        🔧 如注册后无法登录，请去 Supabase Dashboard → Authentication → Settings → 关闭 "Confirm email"
+        🌐 数据存储在 Cloudflare D1，所有设备共享同一份数据。演示账号：volunteer_liu@shanhau.org / 123456
       </div>
     </div>
   </div>
@@ -415,19 +414,43 @@ body {
 
 <script>
 // ============================================================
-// SUPABASE CLIENT
+// CLOUDFLARE WORKER API CLIENT
 // ============================================================
-const SUPABASE_URL = 'https://spsxuxpwlhalydzzqmjh.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwc3h1eHB3bGhhbHlkenpxbWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MjM3NzQsImV4cCI6MjA5NDQ5OTc3NH0.cqcA_qzBoMzDWDWPJCw-t_pthcjpg_xYofWHFqJmuyg';
-let supabase;
-try {
-  if (!window.supabase) throw new Error('Supabase SDK 未加载');
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch(e) {
-  document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('authPage').innerHTML = `<div style="text-align:center;padding:40px;"><h3>⚠️ 加载失败</h3><p>${e.message}</p><p style="font-size:13px;color:#888;">请刷新页面重试（Ctrl+Shift+R）</p></div>`;
-  });
+// 部署后替换为你的 Cloudflare Worker URL
+const API_BASE = 'https://shanhau-api.REPLACE.workers.dev';
+let authToken = localStorage.getItem('auth_token') || null;
+
+function setToken(token) { authToken = token; if (token) localStorage.setItem('auth_token', token); else localStorage.removeItem('auth_token'); }
+
+async function apiFetch(path, options = {}) {
+  const url = `${API_BASE}${path}`;
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `请求失败 (${res.status})`);
+  }
+  return res.json();
 }
+
+// API helpers
+const api = {
+  // Auth
+  login: (email, password) => apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (email, password, name, role) => apiFetch('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name, role }) }),
+  getMe: () => apiFetch('/auth/me'),
+
+  // Generic DB operations
+  list: (table, params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiFetch(`/api/${table}${qs ? '?' + qs : ''}`);
+  },
+  get: (table, id) => apiFetch(`/api/${table}/${id}`),
+  create: (table, data) => apiFetch(`/api/${table}`, { method: 'POST', body: JSON.stringify(data) }),
+  update: (table, id, data) => apiFetch(`/api/${table}/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  remove: (table, id) => apiFetch(`/api/${table}/${id}`, { method: 'DELETE' })
+};
 
 // ============================================================
 // GLOBALS
@@ -436,8 +459,8 @@ const ROLE_LABELS = { teacher: '老师', volunteer: '支教志愿者', parent: '
 const ROLE_ICONS = { teacher: '👩‍🏫', volunteer: '🎓', parent: '👨‍👩‍👧', child: '🎒' };
 const AVATAR_COLORS = ['#E8915C','#5B9A6B','#5B7F9A','#C8A52B','#E85C5C','#8B5CF6'];
 
-let currentUser = null;   // Supabase auth user
-let currentProfile = null; // profiles table row
+let currentUser = null;   // logged-in user object
+let currentProfile = null; // same as currentUser, for compatibility
 let children = [];
 let growthRecords = [];
 let messages = [];
@@ -449,7 +472,6 @@ let profiles = []; // cached for display
 // ============================================================
 async function handleLogin(e) {
   e.preventDefault();
-  if (!supabase) { showToast('系统初始化中，请刷新页面', 'error'); return; }
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
   const errorEl = document.getElementById('loginError');
@@ -457,25 +479,22 @@ async function handleLogin(e) {
   btn.disabled = true; btn.textContent = '登录中...';
 
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      errorEl.textContent = error.message === 'Invalid login credentials' ? '邮箱或密码错误' : error.message;
-      errorEl.style.display = 'block';
-      btn.disabled = false; btn.textContent = '登 录';
-      return;
-    }
+    const data = await api.login(email, password);
+    setToken(data.token);
+    currentUser = data.user;
+    currentProfile = data.user;
     errorEl.style.display = 'none';
-    await onLoginSuccess(data.user);
+    showApp();
+    showToast(`欢迎回来，${currentProfile.name}！`, 'success');
   } catch(ex) {
-    console.error('Login error:', ex);
-    showToast('登录失败：' + (ex.message || '网络错误'), 'error');
+    errorEl.textContent = ex.message || '登录失败';
+    errorEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = '登 录';
   }
-  btn.disabled = false; btn.textContent = '登 录';
 }
 
 async function handleRegister(e) {
   e.preventDefault();
-  if (!supabase) { showToast('系统初始化中，请刷新页面', 'error'); return; }
   const email = document.getElementById('regEmail').value.trim();
   const password = document.getElementById('regPassword').value;
   const name = document.getElementById('regName').value.trim();
@@ -485,59 +504,23 @@ async function handleRegister(e) {
   btn.disabled = true; btn.textContent = '注册中...';
 
   try {
-    const { data, error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { name, role } }
-    });
-
-  if (error) {
-    errorEl.textContent = error.message.includes('already registered') ? '该邮箱已被注册' : error.message;
+    const data = await api.register(email, password, name, role);
+    setToken(data.token);
+    currentUser = data.user;
+    currentProfile = data.user;
+    errorEl.style.display = 'none';
+    showApp();
+    showToast('注册成功！', 'success');
+  } catch(ex) {
+    errorEl.textContent = ex.message || '注册失败';
     errorEl.style.display = 'block';
     btn.disabled = false; btn.textContent = '注 册';
-    return;
   }
-
-  // If user is immediately signed in (email confirmation disabled)
-    if (data.user && data.session) {
-      await supabase.from('profiles').insert({
-        id: data.user.id, username: email, name, role,
-        avatar_color: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
-      });
-      await onLoginSuccess(data.user);
-    } else {
-      showToast('注册成功！如开启了邮箱验证，请查收验证邮件后登录。', 'success');
-      switchAuthTab('login');
-    }
-    btn.disabled = false; btn.textContent = '注 册';
-    errorEl.style.display = 'none';
-  } catch(ex) {
-    console.error('Register error:', ex);
-    showToast('注册失败：' + (ex.message || '未知错误，请刷新页面后重试'), 'error');
-    btn.disabled = false; btn.textContent = '注 册';
-  }
-}
-
-async function onLoginSuccess(user) {
-  currentUser = user;
-  // Load profile
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-  currentProfile = profile;
-  if (!profile) {
-    // Auto-create profile from metadata
-    const meta = user.user_metadata || {};
-    const { data: newProfile } = await supabase.from('profiles').insert({
-      id: user.id, username: user.email, name: meta.name || user.email, role: meta.role || 'volunteer',
-      avatar_color: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
-    }).select().single();
-    currentProfile = newProfile;
-  }
-  showApp();
-  showToast(`欢迎回来，${currentProfile.name}！`, 'success');
 }
 
 async function handleLogout() {
   document.getElementById('userDropdown').classList.remove('open');
-  await supabase.auth.signOut();
+  setToken(null);
   currentUser = null;
   currentProfile = null;
   showAuthPage();
@@ -601,31 +584,17 @@ function showProfile() {
 // ============================================================
 async function loadAllData() {
   const [cRes, gRes, mRes, qRes, pRes] = await Promise.all([
-    supabase.from('children').select('*').order('created_at', { ascending: true }),
-    supabase.from('growth_records').select('*').order('date', { ascending: false }),
-    supabase.from('messages').select('*').order('created_at', { ascending: false }),
-    supabase.from('qa_posts').select('*').order('created_at', { ascending: false }),
-    supabase.from('profiles').select('*')
+    api.list('children', { _order: 'created_at', _asc: 'true' }),
+    api.list('growth-records', { _order: 'date', _asc: 'false', include_comments: 'true' }),
+    api.list('messages', { _order: 'created_at', _asc: 'false', include_comments: 'true' }),
+    api.list('qa-posts', { _order: 'created_at', _asc: 'false', include_answers: 'true' }),
+    api.list('profiles')
   ]);
-  children = cRes.data || [];
-  growthRecords = gRes.data || [];
-  messages = mRes.data || [];
-  qaPosts = qRes.data || [];
-  profiles = pRes.data || [];
-  // Load answers for each QA post
-  for (const qa of qaPosts) {
-    const { data: answers } = await supabase.from('qa_answers').select('*').eq('post_id', qa.id).order('created_at', { ascending: true });
-    qa.answers = answers || [];
-  }
-  // Load comments for growth records and messages
-  for (const g of growthRecords) {
-    const { data: comments } = await supabase.from('comments').select('*').eq('parent_type', 'growth').eq('parent_id', g.id).order('created_at', { ascending: true });
-    g.comments = comments || [];
-  }
-  for (const m of messages) {
-    const { data: comments } = await supabase.from('comments').select('*').eq('parent_type', 'message').eq('parent_id', m.id).order('created_at', { ascending: true });
-    m.comments = comments || [];
-  }
+  children = cRes || [];
+  growthRecords = gRes || [];
+  messages = mRes || [];
+  qaPosts = qRes || [];
+  profiles = pRes || [];
 }
 
 // ============================================================
@@ -998,9 +967,9 @@ function renderCommentInput(type, parentId) {
 // ================================================================
 async function toggleLike(type, id) {
   let table, item;
-  if (type === 'growth') { table = 'growth_records'; item = growthRecords.find(r => r.id === id); }
+  if (type === 'growth') { table = 'growth-records'; item = growthRecords.find(r => r.id === id); }
   else if (type === 'message') { table = 'messages'; item = messages.find(m => m.id === id); }
-  else if (type === 'qa') { table = 'qa_posts'; item = qaPosts.find(q => q.id === id); }
+  else if (type === 'qa') { table = 'qa-posts'; item = qaPosts.find(q => q.id === id); }
   else return;
   if (!item) return;
 
@@ -1009,7 +978,7 @@ async function toggleLike(type, id) {
   if (idx >= 0) { likedBy.splice(idx, 1); item.likes = Math.max(0, (item.likes || 0) - 1); }
   else { likedBy.push(currentUser.id); item.likes = (item.likes || 0) + 1; }
 
-  await supabase.from(table).update({ likes: item.likes, liked_by: likedBy }).eq('id', id);
+  await api.update(table, id, { likes: item.likes, liked_by: likedBy });
   render();
 }
 
@@ -1017,7 +986,7 @@ async function toggleLikeAnswer(qaId, answerId) {
   const answer = qaPosts.find(q => q.id === qaId)?.answers?.find(a => a.id === answerId);
   if (!answer) return;
   answer.likes = (answer.likes || 0) + 1;
-  await supabase.from('qa_answers').update({ likes: answer.likes }).eq('id', answerId);
+  await api.update('qa-answers', answerId, { likes: answer.likes });
   render();
 }
 
@@ -1034,7 +1003,7 @@ function toggleAnswerInput(id) {
 async function addComment(type, parentId) {
   const input = document.getElementById(`commentInput-${type}-${parentId}`);
   if (!input || !input.value.trim()) return;
-  await supabase.from('comments').insert({
+  await api.create('comments', {
     parent_type: type, parent_id: parentId,
     author: currentProfile.name, author_id: currentUser.id,
     text: input.value.trim(), date: new Date().toISOString().slice(0, 10)
@@ -1046,7 +1015,7 @@ async function addComment(type, parentId) {
 async function addAnswer(qaId) {
   const textInput = document.getElementById(`answerText-${qaId}`);
   if (!textInput || !textInput.value.trim()) return;
-  await supabase.from('qa_answers').insert({
+  await api.create('qa-answers', {
     post_id: qaId, author: currentProfile.name, author_id: currentUser.id,
     text: textInput.value.trim(), date: new Date().toISOString().slice(0, 10), likes: 0
   });
@@ -1059,9 +1028,9 @@ async function addAnswer(qaId) {
 // ================================================================
 async function deleteItem(type, id) {
   if (!confirm('确定要删除吗？')) return;
-  const map = { growth: 'growth_records', message: 'messages', qa: 'qa_posts' };
+  const map = { growth: 'growth-records', message: 'messages', qa: 'qa-posts' };
   const table = map[type];
-  if (table) await supabase.from(table).delete().eq('id', id);
+  if (table) await api.remove(table, id);
   render();
   showToast('已删除', 'success');
 }
@@ -1069,7 +1038,7 @@ async function deleteItem(type, id) {
 async function deleteChild(id) {
   if (!canManage()) { showToast('没有权限', 'error'); return; }
   if (!confirm('确定删除？相关记录也会被删除。')) return;
-  await supabase.from('children').delete().eq('id', id);
+  await api.remove('children', id);
   render();
   showToast('已删除', 'success');
 }
@@ -1126,9 +1095,9 @@ function showAddChildModal(editChildData = null) {
     const fileInput = overlay.querySelector('#childAvatar');
     const save = async (avatarUrl = '') => {
       if (isEdit) {
-        await supabase.from('children').update({ name, age, grade, description: desc, avatar: avatarUrl || c.avatar }).eq('id', c.id);
+        await api.update('children', c.id, { name, age, grade, description: desc, avatar: avatarUrl || c.avatar });
       } else {
-        await supabase.from('children').insert({ name, age, grade, description: desc, avatar: avatarUrl, join_date: new Date().toISOString().slice(0, 10), created_by: currentUser.id });
+        await api.create('children', { name, age, grade, description: desc, avatar: avatarUrl, join_date: new Date().toISOString().slice(0, 10), created_by: currentUser.id });
       }
       render();
       showToast(isEdit ? '信息已更新' : '孩子已添加', 'success');
@@ -1161,7 +1130,7 @@ function showAddGrowthModal(childId = '') {
     const child = children.find(c => c.id === childIdVal);
     const files = overlay.querySelector('#growthMedia').files;
     const save = async (mediaUrls = []) => {
-      await supabase.from('growth_records').insert({ child_id: childIdVal, child_name: child?.name || '', date, type, title, description: desc, media: mediaUrls, likes: 0, liked_by: [], created_by: currentUser.id });
+      await api.create('growth-records', { child_id: childIdVal, child_name: child?.name || '', date, type, title, description: desc, media: mediaUrls, likes: 0, liked_by: [], created_by: currentUser.id });
       render(); showToast('成长记录已添加', 'success');
     };
     if (files.length > 0) {
@@ -1185,7 +1154,7 @@ function showAddMessageModal() {
     const toChild = overlay.querySelector('#msgToChild').value;
     const content = overlay.querySelector('#msgContent').value.trim();
     if (!content) { showToast('请输入寄语内容', 'error'); return false; }
-    await supabase.from('messages').insert({ author: currentProfile.name, author_id: currentUser.id, avatar_color: currentProfile.avatar_color, to_child: toChild, content, date: new Date().toISOString().slice(0, 10), likes: 0, liked_by: [] });
+    await api.create('messages', { author: currentProfile.name, author_id: currentUser.id, avatar_color: currentProfile.avatar_color, to_child: toChild, content, date: new Date().toISOString().slice(0, 10), likes: 0, liked_by: [] });
     render(); showToast('寄语已发送', 'success');
   });
 }
@@ -1202,7 +1171,7 @@ function showAddQAModal() {
     const title = overlay.querySelector('#qaTitle').value.trim();
     const content = overlay.querySelector('#qaContent').value.trim();
     if (!title) { showToast('请输入问题标题', 'error'); return false; }
-    await supabase.from('qa_posts').insert({ author: currentProfile.name, author_id: currentUser.id, role, title, content, date: new Date().toISOString().slice(0, 10), likes: 0, liked_by: [] });
+    await api.create('qa-posts', { author: currentProfile.name, author_id: currentUser.id, role, title, content, date: new Date().toISOString().slice(0, 10), likes: 0, liked_by: [] });
     render(); showToast('问题已发布', 'success');
   });
 }
@@ -1212,13 +1181,13 @@ function showAddQAModal() {
 // ================================================================
 async function initDemoData() {
   if (!canManage()) { showToast('仅老师/志愿者可操作', 'error'); return; }
-  if (!confirm('将创建 4 个演示账号和示例数据（孩子、成长记录、寄语、问答）。确定继续？')) return;
+  if (!confirm('将创建 3 个演示账号和示例数据（孩子、成长记录、寄语、问答）。确定继续？')) return;
 
   const btn = document.getElementById('initDemoBtn');
   btn.disabled = true; btn.textContent = '初始化中...';
 
   try {
-    // Create 4 demo users
+    // Create demo users via register API (doesn't change our session)
     const demoUsers = [
       { email: 'volunteer_liu@shanhau.org', password: '123456', name: '刘志愿者', role: 'volunteer' },
       { email: 'parent_zhang@shanhau.org', password: '123456', name: '小梅妈妈', role: 'parent' },
@@ -1227,81 +1196,80 @@ async function initDemoData() {
 
     const userIds = { volunteer: '', parent: '', child: '' };
     for (const u of demoUsers) {
-      const { data, error } = await supabase.auth.signUp({ email: u.email, password: u.password });
-      if (!error && data.user) {
-        const { data: profile } = await supabase.from('profiles').insert({
-          id: data.user.id, username: u.email, name: u.name, role: u.role,
-          avatar_color: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
-          linked_children: u.role === 'parent' ? [] : []
-        }).select('id').single();
-        if (u.role === 'volunteer') userIds.volunteer = data.user.id;
-        else if (u.role === 'parent') userIds.parent = data.user.id;
-        else if (u.role === 'child') userIds.child = data.user.id;
+      try {
+        const data = await api.register(u.email, u.password, u.name, u.role);
+        if (data.user) {
+          if (u.role === 'volunteer') userIds.volunteer = data.user.id;
+          else if (u.role === 'parent') userIds.parent = data.user.id;
+          else if (u.role === 'child') userIds.child = data.user.id;
+        }
+      } catch(e) {
+        // User might already exist, continue
+        console.warn('Demo user creation:', e.message);
       }
     }
-    // Update parent's linked children after children are created
-    await new Promise(r => setTimeout(r, 500));
 
     // Insert children
-    const { data: newChildren } = await supabase.from('children').insert([
+    const childDefs = [
       { name: '王小梅', age: 10, grade: '四年级', description: '性格开朗，喜欢画画和唱歌，是班上的文艺委员。家里有个弟弟，每天放学后帮忙做家务。', join_date: '2024-09-01', created_by: currentUser.id },
       { name: '李浩然', age: 8, grade: '二年级', description: '活泼好动，对数学特别感兴趣，经常追着老师问问题。梦想是当一名科学家。', join_date: '2024-09-01', created_by: currentUser.id },
       { name: '张小芳', age: 11, grade: '五年级', description: '文静乖巧，作文写得非常好，是语文课代表。喜欢读书，尤其喜欢童话故事。', join_date: '2024-09-01', created_by: currentUser.id },
       { name: '陈强', age: 9, grade: '三年级', description: '班上的小班长，责任心强，乐于助人。喜欢体育运动，特别是足球和跑步。', join_date: '2024-09-01', created_by: currentUser.id },
-    ]).select();
+    ];
+    const newChildren = [];
+    for (const c of childDefs) {
+      const created = await api.create('children', c);
+      newChildren.push(created);
+    }
 
-    if (newChildren && userIds.parent) {
-      // Link parent to child c1 (王小梅)
+    // Link parent to 王小梅
+    if (userIds.parent) {
       const c1 = newChildren.find(c => c.name === '王小梅');
       if (c1) {
-        await supabase.from('profiles').update({ linked_children: [c1.id] }).eq('id', userIds.parent);
+        await api.update('profiles', userIds.parent, { linked_children: [c1.id] });
       }
     }
-    if (newChildren && userIds.child) {
+    if (userIds.child) {
       const c1 = newChildren.find(c => c.name === '王小梅');
       if (c1) {
-        await supabase.from('profiles').update({ linked_children: [c1.id] }).eq('id', userIds.child);
+        await api.update('profiles', userIds.child, { linked_children: [c1.id] });
       }
     }
+
+    // Map child names to IDs
+    const cMap = {};
+    newChildren.forEach(c => { cMap[c.name] = c.id; });
 
     // Insert growth records
-    if (newChildren) {
-      const cMap = {};
-      newChildren.forEach(c => { cMap[c.name] = c.id; });
-      await supabase.from('growth_records').insert([
-        { child_id: cMap['王小梅'], child_name: '王小梅', date: '2024-10-15', type: 'photo', title: '第一次画水彩画', description: '美术课上，小梅第一次接触水彩，画了一幅山里的日出，色彩运用让人惊喜。', likes: 5, liked_by: [], created_by: currentUser.id },
-        { child_id: cMap['李浩然'], child_name: '李浩然', date: '2024-11-02', type: 'milestone', title: '数学竞赛获奖', description: '浩然参加镇上的数学竞赛，获得二年级组第二名。', likes: 8, liked_by: [], created_by: currentUser.id },
-        { child_id: cMap['张小芳'], child_name: '张小芳', date: '2024-12-20', type: 'photo', title: '作文比赛一等奖', description: '小芳的作文《山那边的世界》在县作文比赛中获得一等奖。', likes: 12, liked_by: [], created_by: currentUser.id },
-        { child_id: cMap['陈强'], child_name: '陈强', date: '2025-01-10', type: 'video', title: '运动会100米冠军', description: '学校运动会上，陈强以14秒夺得短跑冠军。', likes: 7, liked_by: [], created_by: currentUser.id },
-      ]);
+    const growthDefs = [
+      { child_id: cMap['王小梅'], child_name: '王小梅', date: '2024-10-15', type: 'photo', title: '第一次画水彩画', description: '美术课上，小梅第一次接触水彩，画了一幅山里的日出，色彩运用让人惊喜。', likes: 5, liked_by: [], created_by: currentUser.id },
+      { child_id: cMap['李浩然'], child_name: '李浩然', date: '2024-11-02', type: 'milestone', title: '数学竞赛获奖', description: '浩然参加镇上的数学竞赛，获得二年级组第二名。', likes: 8, liked_by: [], created_by: currentUser.id },
+      { child_id: cMap['张小芳'], child_name: '张小芳', date: '2024-12-20', type: 'photo', title: '作文比赛一等奖', description: '小芳的作文《山那边的世界》在县作文比赛中获得一等奖。', likes: 12, liked_by: [], created_by: currentUser.id },
+      { child_id: cMap['陈强'], child_name: '陈强', date: '2025-01-10', type: 'video', title: '运动会100米冠军', description: '学校运动会上，陈强以14秒夺得短跑冠军。', likes: 7, liked_by: [], created_by: currentUser.id },
+    ];
+    for (const g of growthDefs) {
+      await api.create('growth-records', g);
     }
 
     // Insert messages
-    await new Promise(r => setTimeout(r, 300));
-    await supabase.from('messages').insert([
+    const msgDefs = [
       { author: '刘志愿者', author_id: userIds.volunteer || currentUser.id, avatar_color: '#5B7F9A', to_child: '王小梅', content: '小梅，你画的那幅《山里的日出》老师一直保存在手机里。你的色彩感特别好，希望你继续保持对画画的热爱，用画笔记录生活的美好。', date: '2024-12-01', likes: 3, liked_by: [] },
       { author: currentProfile.name, author_id: currentUser.id, avatar_color: currentProfile.avatar_color, to_child: '', content: '看到孩子们在这么艰苦的条件下还这么努力地学习，真的很感动。希望你们都能实现自己的梦想，走出大山，看到更广阔的世界。', date: '2025-01-05', likes: 6, liked_by: [] },
       { author: '小梅妈妈', author_id: userIds.parent || currentUser.id, avatar_color: '#5B9A6B', to_child: '王小梅', content: '小梅，妈妈看到你的画被老师表扬了，特别骄傲。只要你喜欢画画，妈妈一定支持你。好好学习，将来当一个画家！', date: '2025-02-14', likes: 9, liked_by: [] },
-    ]);
+    ];
+    for (const m of msgDefs) {
+      await api.create('messages', m);
+    }
 
     // Insert Q&A
-    await new Promise(r => setTimeout(r, 300));
-    const { data: qa1 } = await supabase.from('qa_posts').insert({ author: '刘志愿者', author_id: userIds.volunteer || currentUser.id, role: 'volunteer', title: '你们最喜欢的科目是什么？为什么？', content: '我很好奇在现在的课程中，大家最喜欢上什么课？', date: '2024-11-10', likes: 5, liked_by: [] }).select('id').single();
-    if (qa1) {
-      await supabase.from('qa_answers').insert([
-        { post_id: qa1.id, author: '王小梅', author_id: userIds.child || currentUser.id, text: '我最喜欢美术课，因为可以画画，画出心里想的东西。', date: '2024-11-11', likes: 4 },
-        { post_id: qa1.id, author: '李浩然', author_id: currentUser.id, text: '我最喜欢数学！解出难题特别开心，老师说数学好可以当科学家。', date: '2024-11-12', likes: 3 },
-      ]);
-    }
-    const { data: qa2 } = await supabase.from('qa_posts').insert({ author: '王小梅', author_id: userIds.child || currentUser.id, role: 'student', title: '大学是什么样子的？', content: '老师们都是从大学来的，我想知道大学里都学什么？', date: '2024-11-15', likes: 8, liked_by: [] }).select('id').single();
-    if (qa2) {
-      await supabase.from('qa_answers').insert({ post_id: qa2.id, author: '刘志愿者', author_id: userIds.volunteer || currentUser.id, text: '大学是一个很美好的地方！图书馆里有看不完的书，还有各种社团活动。加油学习，你一定能考上好大学！', date: '2024-11-16', likes: 7 });
-    }
+    const qa1 = await api.create('qa-posts', { author: '刘志愿者', author_id: userIds.volunteer || currentUser.id, role: 'volunteer', title: '你们最喜欢的科目是什么？为什么？', content: '我很好奇在现在的课程中，大家最喜欢上什么课？', date: '2024-11-10', likes: 5, liked_by: [] });
+    await api.create('qa-answers', { post_id: qa1.id, author: '王小梅', author_id: userIds.child || currentUser.id, text: '我最喜欢美术课，因为可以画画，画出心里想的东西。', date: '2024-11-11', likes: 4 });
+    await api.create('qa-answers', { post_id: qa1.id, author: '李浩然', author_id: currentUser.id, text: '我最喜欢数学！解出难题特别开心，老师说数学好可以当科学家。', date: '2024-11-12', likes: 3 });
 
-    // Re-login as current user (signUp switches session to last created user)
-    await supabase.auth.signInWithPassword({ email: currentUser.email, password: '123456' }).catch(() => {});
+    const qa2 = await api.create('qa-posts', { author: '王小梅', author_id: userIds.child || currentUser.id, role: 'student', title: '大学是什么样子的？', content: '老师们都是从大学来的，我想知道大学里都学什么？', date: '2024-11-15', likes: 8, liked_by: [] });
+    await api.create('qa-answers', { post_id: qa2.id, author: '刘志愿者', author_id: userIds.volunteer || currentUser.id, text: '大学是一个很美好的地方！图书馆里有看不完的书，还有各种社团活动。加油学习，你一定能考上好大学！', date: '2024-11-16', likes: 7 });
 
-    showToast('演示数据初始化成功！刷新后可用演示账号登录。', 'success');
+    showToast('演示数据初始化成功！可用演示账号登录。', 'success');
     setTimeout(() => render(), 500);
   } catch (e) {
     showToast('初始化出错: ' + e.message, 'error');
@@ -1363,39 +1331,25 @@ document.addEventListener('keydown', (e) => {
 // INIT
 // ================================================================
 async function init() {
-  if (!supabase) {
-    document.getElementById('authPage').innerHTML = '<div style="text-align:center;padding:60px;"><h3>⚠️ 系统初始化失败</h3><p>请刷新页面（Ctrl+Shift+R）</p></div>';
-    return;
-  }
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      currentUser = session.user;
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-      if (profile) { currentProfile = profile; showApp(); } else { showAuthPage(); }
-    } else {
-      showAuthPage();
-    }
-  } catch(e) {
-    console.error('Init error:', e);
-    if (e.message && e.message.includes('Failed to fetch')) {
-      document.getElementById('authPage').innerHTML = '<div style="text-align:center;padding:60px;"><h3>⚠️ 无法连接服务器</h3><p>请检查网络连接后刷新页面</p></div>';
-    } else {
-      showAuthPage();
+  // Check if user was previously logged in (JWT in localStorage)
+  if (authToken) {
+    try {
+      const data = await api.getMe();
+      currentUser = data.user;
+      currentProfile = data.user;
+      showApp();
+      return;
+    } catch(e) {
+      // Token expired or invalid
+      setToken(null);
     }
   }
+  showAuthPage();
 }
 
-// Listen for auth state changes (for OAuth, etc.)
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT') {
-    currentUser = null; currentProfile = null; showAuthPage();
-  }
-});
-
 init();
-console.log('🌻 山花成长记 - 云端版已就绪');
-console.log('数据存储在 Supabase PostgreSQL，所有设备共享同一份数据');
+console.log('🌻 山花成长记 - Cloudflare Workers + D1 云端版已就绪');
+console.log('数据存储在 Cloudflare D1 数据库，所有设备共享同一份数据');
 </script>
 </body>
 </html>
