@@ -419,7 +419,15 @@ body {
 // ============================================================
 const SUPABASE_URL = 'https://spsxuxpwlhalydzzqmjh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwc3h1eHB3bGhhbHlkenpxbWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MjM3NzQsImV4cCI6MjA5NDQ5OTc3NH0.cqcA_qzBoMzDWDWPJCw-t_pthcjpg_xYofWHFqJmuyg';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabase;
+try {
+  if (!window.supabase) throw new Error('Supabase SDK 未加载');
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch(e) {
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('authPage').innerHTML = `<div style="text-align:center;padding:40px;"><h3>⚠️ 加载失败</h3><p>${e.message}</p><p style="font-size:13px;color:#888;">请刷新页面重试（Ctrl+Shift+R）</p></div>`;
+  });
+}
 
 // ============================================================
 // GLOBALS
@@ -441,26 +449,33 @@ let profiles = []; // cached for display
 // ============================================================
 async function handleLogin(e) {
   e.preventDefault();
+  if (!supabase) { showToast('系统初始化中，请刷新页面', 'error'); return; }
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
   const errorEl = document.getElementById('loginError');
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = '登录中...';
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    errorEl.textContent = error.message === 'Invalid login credentials' ? '邮箱或密码错误' : error.message;
-    errorEl.style.display = 'block';
-    btn.disabled = false; btn.textContent = '登 录';
-    return;
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      errorEl.textContent = error.message === 'Invalid login credentials' ? '邮箱或密码错误' : error.message;
+      errorEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = '登 录';
+      return;
+    }
+    errorEl.style.display = 'none';
+    await onLoginSuccess(data.user);
+  } catch(ex) {
+    console.error('Login error:', ex);
+    showToast('登录失败：' + (ex.message || '网络错误'), 'error');
   }
-  errorEl.style.display = 'none';
-  await onLoginSuccess(data.user);
   btn.disabled = false; btn.textContent = '登 录';
 }
 
 async function handleRegister(e) {
   e.preventDefault();
+  if (!supabase) { showToast('系统初始化中，请刷新页面', 'error'); return; }
   const email = document.getElementById('regEmail').value.trim();
   const password = document.getElementById('regPassword').value;
   const name = document.getElementById('regName').value.trim();
@@ -469,10 +484,11 @@ async function handleRegister(e) {
   const btn = document.getElementById('registerBtn');
   btn.disabled = true; btn.textContent = '注册中...';
 
-  const { data, error } = await supabase.auth.signUp({
-    email, password,
-    options: { data: { name, role } }
-  });
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email, password,
+      options: { data: { name, role } }
+    });
 
   if (error) {
     errorEl.textContent = error.message.includes('already registered') ? '该邮箱已被注册' : error.message;
@@ -482,19 +498,23 @@ async function handleRegister(e) {
   }
 
   // If user is immediately signed in (email confirmation disabled)
-  if (data.user && data.session) {
-    // Create profile
-    await supabase.from('profiles').insert({
-      id: data.user.id, username: email, name, role,
-      avatar_color: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
-    });
-    await onLoginSuccess(data.user);
-  } else {
-    showToast('注册成功！如开启了邮箱验证，请查收验证邮件后登录。', 'success');
-    switchAuthTab('login');
+    if (data.user && data.session) {
+      await supabase.from('profiles').insert({
+        id: data.user.id, username: email, name, role,
+        avatar_color: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
+      });
+      await onLoginSuccess(data.user);
+    } else {
+      showToast('注册成功！如开启了邮箱验证，请查收验证邮件后登录。', 'success');
+      switchAuthTab('login');
+    }
+    btn.disabled = false; btn.textContent = '注 册';
+    errorEl.style.display = 'none';
+  } catch(ex) {
+    console.error('Register error:', ex);
+    showToast('注册失败：' + (ex.message || '未知错误，请刷新页面后重试'), 'error');
+    btn.disabled = false; btn.textContent = '注 册';
   }
-  btn.disabled = false; btn.textContent = '注 册';
-  errorEl.style.display = 'none';
 }
 
 async function onLoginSuccess(user) {
@@ -1343,14 +1363,26 @@ document.addEventListener('keydown', (e) => {
 // INIT
 // ================================================================
 async function init() {
-  // Check for existing session
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-    if (profile) { currentProfile = profile; showApp(); } else { showAuthPage(); }
-  } else {
-    showAuthPage();
+  if (!supabase) {
+    document.getElementById('authPage').innerHTML = '<div style="text-align:center;padding:60px;"><h3>⚠️ 系统初始化失败</h3><p>请刷新页面（Ctrl+Shift+R）</p></div>';
+    return;
+  }
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+      if (profile) { currentProfile = profile; showApp(); } else { showAuthPage(); }
+    } else {
+      showAuthPage();
+    }
+  } catch(e) {
+    console.error('Init error:', e);
+    if (e.message && e.message.includes('Failed to fetch')) {
+      document.getElementById('authPage').innerHTML = '<div style="text-align:center;padding:60px;"><h3>⚠️ 无法连接服务器</h3><p>请检查网络连接后刷新页面</p></div>';
+    } else {
+      showAuthPage();
+    }
   }
 }
 
