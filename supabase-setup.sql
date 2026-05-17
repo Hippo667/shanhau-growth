@@ -97,14 +97,46 @@ CREATE TABLE IF NOT EXISTS comments (
 
 -- ============================================================
 -- RLS 策略：允许认证用户访问所有数据（共享平台）
+-- 先删除旧策略（如果存在），再重新创建
 -- ============================================================
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE children ENABLE ROW LEVEL SECURITY;
-ALTER TABLE growth_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE qa_posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE qa_answers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  ALTER TABLE IF EXISTS profiles ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE IF EXISTS children ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE IF EXISTS growth_records ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE IF EXISTS messages ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE IF EXISTS qa_posts ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE IF EXISTS qa_answers ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE IF EXISTS comments ENABLE ROW LEVEL SECURITY;
+  -- Drop existing policies
+  DROP POLICY IF EXISTS "auth_read" ON profiles;
+  DROP POLICY IF EXISTS "auth_insert" ON profiles;
+  DROP POLICY IF EXISTS "auth_update" ON profiles;
+  DROP POLICY IF EXISTS "auth_delete" ON profiles;
+  DROP POLICY IF EXISTS "auth_read" ON children;
+  DROP POLICY IF EXISTS "auth_insert" ON children;
+  DROP POLICY IF EXISTS "auth_update" ON children;
+  DROP POLICY IF EXISTS "auth_delete" ON children;
+  DROP POLICY IF EXISTS "auth_read" ON growth_records;
+  DROP POLICY IF EXISTS "auth_insert" ON growth_records;
+  DROP POLICY IF EXISTS "auth_update" ON growth_records;
+  DROP POLICY IF EXISTS "auth_delete" ON growth_records;
+  DROP POLICY IF EXISTS "auth_read" ON messages;
+  DROP POLICY IF EXISTS "auth_insert" ON messages;
+  DROP POLICY IF EXISTS "auth_update" ON messages;
+  DROP POLICY IF EXISTS "auth_delete" ON messages;
+  DROP POLICY IF EXISTS "auth_read" ON qa_posts;
+  DROP POLICY IF EXISTS "auth_insert" ON qa_posts;
+  DROP POLICY IF EXISTS "auth_update" ON qa_posts;
+  DROP POLICY IF EXISTS "auth_delete" ON qa_posts;
+  DROP POLICY IF EXISTS "auth_read" ON qa_answers;
+  DROP POLICY IF EXISTS "auth_insert" ON qa_answers;
+  DROP POLICY IF EXISTS "auth_update" ON qa_answers;
+  DROP POLICY IF EXISTS "auth_delete" ON qa_answers;
+  DROP POLICY IF EXISTS "auth_read" ON comments;
+  DROP POLICY IF EXISTS "auth_insert" ON comments;
+  DROP POLICY IF EXISTS "auth_update" ON comments;
+  DROP POLICY IF EXISTS "auth_delete" ON comments;
+END $$;
 
 -- 认证用户可读
 CREATE POLICY "auth_read" ON profiles FOR SELECT TO authenticated USING (true);
