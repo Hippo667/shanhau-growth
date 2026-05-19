@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="小问号科学周刊——给志愿者哥哥姐姐写信">
+  <title>我想写信 - 小问号科学周刊</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" width="42" height="42">
+        <circle cx="25" cy="25" r="24" fill="#FF9A56"/>
+        <ellipse cx="18" cy="22" rx="14" ry="12" fill="#FFF8E7"/>
+        <polygon points="10,16 4,8 20,8 22,16" fill="#FF9A56"/>
+        <polygon points="18,16 12,8 28,8 30,16" fill="#FF9A56"/>
+        <circle cx="14" cy="19" r="3.5" fill="#4A3728"/>
+        <circle cx="24" cy="19" r="3.5" fill="#4A3728"/>
+        <ellipse cx="19" cy="26" rx="6" ry="3.5" fill="#4A3728"/>
+      </svg>
+      小问号科学周刊
+    </a>
+    <nav class="nav-links">
+      <a href="index.html">故事宝箱</a>
+      <a href="story.html?id=1">看故事</a>
+      <a href="letter.html">我想写信</a>
+      <a href="about.html">关于我们</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page-container">
+
+  <div class="letter-page">
+
+    <div class="letter-intro">
+      <span class="big-emoji">✉️</span>
+      <h2>我想写信</h2>
+      <p>读完故事，你是不是有很多话想说？<br>给讲故事的哥哥姐姐写一封信吧，他们会看到的！</p>
+    </div>
+
+    <div class="letter-form">
+      <label class="form-label">你今天的心情是？</label>
+      <div class="mood-selector" id="moodSelector">
+        <button class="mood-btn" data-mood="😊" title="开心">😊</button>
+        <button class="mood-btn" data-mood="😢" title="难过">😢</button>
+        <button class="mood-btn" data-mood="🤔" title="好奇">🤔</button>
+        <button class="mood-btn" data-mood="😴" title="困了">😴</button>
+        <button class="mood-btn" data-mood="🥳" title="兴奋">🥳</button>
+        <button class="mood-btn" data-mood="😤" title="生气">😤</button>
+      </div>
+
+      <label class="form-label">你想说什么？</label>
+      <textarea class="letter-input" id="letterInput" placeholder="告诉哥哥姐姐你的想法吧……比如：我今天读了一个故事，我觉得……"></textarea>
+
+      <button class="btn-voice" id="btnVoice">🎤 语音转文字</button>
+
+      <div class="text-center">
+        <button class="btn-send" id="btnSendLetter" style="font-size:1.05rem;padding:12px 40px;">
+          ✉️ 寄出这封信
+        </button>
+      </div>
+    </div>
+
+    <div class="sent-letters" id="sentLetters">
+      <h3>📬 你寄出的信</h3>
+      <div id="lettersList">
+        <!-- JS dynamic render -->
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <p>每一封信都会被打印出来，送到志愿者哥哥姐姐手中 <span class="heart">♥</span></p>
+  <p>小问号科学周刊 · 大学生志愿者公益项目</p>
+</footer>
+
+<script src="js/stories.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function() {
+  let selectedMood = '';
+  const STORAGE_KEY = 'wks_letters';
+
+  // 心情选择
+  document.getElementById('moodSelector').addEventListener('click', function(e) {
+    const btn = e.target.closest('.mood-btn');
+    if (!btn) return;
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedMood = btn.dataset.mood;
+  });
+
+  // 语音转文字
+  const btnVoice = document.getElementById('btnVoice');
+  const letterInput = document.getElementById('letterInput');
+  let recognition = null;
+
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.lang = 'zh-CN';
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    recognition.addEventListener('result', function(e) {
+      let transcript = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
+      letterInput.value = transcript;
+    });
+
+    recognition.addEventListener('end', function() {
+      btnVoice.classList.remove('recording');
+      btnVoice.innerHTML = '🎤 语音转文字';
+    });
+
+    recognition.addEventListener('error', function() {
+      btnVoice.classList.remove('recording');
+      btnVoice.innerHTML = '🎤 语音转文字';
+      showToast('语音识别出了点问题，请检查麦克风权限');
+    });
+  } else {
+    btnVoice.style.display = 'none';
+  }
+
+  btnVoice.addEventListener('click', function() {
+    if (!recognition) {
+      showToast('你的手机暂不支持语音输入，请打字输入吧');
+      return;
+    }
+    if (btnVoice.classList.contains('recording')) {
+      recognition.stop();
+    } else {
+      recognition.start();
+      btnVoice.classList.add('recording');
+      btnVoice.innerHTML = '⏹ 停止录音';
+    }
+  });
+
+  // 加载已发送的信
+  function loadLetters() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  function saveLetters(letters) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(letters));
+  }
+
+  function renderLetters() {
+    const letters = loadLetters();
+    const container = document.getElementById('lettersList');
+    if (letters.length === 0) {
+      container.innerHTML = '<p class="text-center" style="color:var(--text-muted);padding:20px;">你还没有寄出过信哦，写一封信吧 ✨</p>';
+      return;
+    }
+    container.innerHTML = letters.reverse().map(l => `
+      <div class="letter-card">
+        <span class="letter-mood">${l.mood}</span>
+        <div>
+          <p class="letter-content">${escapeHtml(l.text)}</p>
+          <span class="letter-date">${l.date}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // 发送信件
+  document.getElementById('btnSendLetter').addEventListener('click', function() {
+    const text = letterInput.value.trim();
+    if (!text) {
+      showToast('请先写点想说的话吧 ✍️');
+      return;
+    }
+    if (!selectedMood) {
+      showToast('请先选择一个心情表情哦 😊');
+      return;
+    }
+
+    const letters = loadLetters();
+    letters.push({
+      mood: selectedMood,
+      text: text,
+      date: new Date().toLocaleString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    });
+    saveLetters(letters);
+
+    letterInput.value = '';
+    selectedMood = '';
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+    renderLetters();
+    showToast('信已寄出！志愿者哥哥姐姐会看到的 💌');
+  });
+
+  // 初始渲染
+  renderLetters();
+})();
+</script>
+</body>
+</html>
