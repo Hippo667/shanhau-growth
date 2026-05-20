@@ -83,6 +83,7 @@
 
 <script src="js/stories.js"></script>
 <script src="js/main.js"></script>
+<script src="js/api.js"></script>
 <script>
 (function() {
   let selectedMood = '';
@@ -179,7 +180,7 @@
     return div.innerHTML;
   }
 
-  // 发送信件
+  // 发送信件（API 优先，localStorage 兜底）
   document.getElementById('btnSendLetter').addEventListener('click', function() {
     const text = letterInput.value.trim();
     if (!text) {
@@ -191,19 +192,34 @@
       return;
     }
 
-    const letters = loadLetters();
-    letters.push({
+    const letterData = {
       mood: selectedMood,
       text: text,
       date: new Date().toLocaleString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-    });
-    saveLetters(letters);
+    };
 
-    letterInput.value = '';
-    selectedMood = '';
-    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
-    renderLetters();
-    showToast('信已寄出！志愿者哥哥姐姐会看到的 💌');
+    // 先发 API
+    api.postLetter(selectedMood, text).then(() => {
+      // API 成功
+      const letters = loadLetters();
+      letters.push(letterData);
+      saveLetters(letters);
+      letterInput.value = '';
+      selectedMood = '';
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+      renderLetters();
+      showToast('信已寄出！志愿者哥哥姐姐会看到的 💌');
+    }).catch(() => {
+      // API 失败：存本地
+      const letters = loadLetters();
+      letters.push(letterData);
+      saveLetters(letters);
+      letterInput.value = '';
+      selectedMood = '';
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+      renderLetters();
+      showToast('信件已保存到本地，联网后会自动寄出 📡');
+    });
   });
 
   // 初始渲染

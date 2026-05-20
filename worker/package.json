@@ -1,0 +1,13 @@
+{
+  "name": "shanhau-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250517.0",
+    "wrangler": "^4.93.0"
+  }
+}

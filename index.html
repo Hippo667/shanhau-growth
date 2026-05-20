@@ -85,6 +85,7 @@
 
 <script src="js/stories.js"></script>
 <script src="js/main.js"></script>
+<script src="js/api.js"></script>
 <script>
 (function() {
   const grid = document.getElementById('tab-read');
@@ -118,6 +119,34 @@
       grid.classList.toggle('hidden', tab !== 'read');
       list.classList.toggle('hidden', tab !== 'listen');
     });
+  });
+
+  // 从 API 获取真实阅读量
+  api.getAllReadCounts().then(data => {
+    const countMap = {};
+    (data.counts || []).forEach(c => { countMap[c.story_id] = c.read_count; });
+    // 更新卡片上的阅读量
+    document.querySelectorAll('.story-card').forEach(card => {
+      const href = card.getAttribute('onclick') || '';
+      const match = href.match(/id=(\d+)/);
+      if (match && countMap[match[1]]) {
+        const footer = card.querySelector('.stars');
+        if (footer) footer.innerHTML = '⭐ ' + countMap[match[1]] + ' 人读过';
+      }
+    });
+    // 更新音频列表上的收听数
+    document.querySelectorAll('.audio-item').forEach(item => {
+      const sid = parseInt(item.dataset.storyId);
+      if (countMap[sid]) {
+        const meta = item.querySelector('.meta');
+        if (meta) {
+          const tag = STORIES.find(s => s.id === sid)?.tag || '';
+          meta.textContent = tag + ' · ' + countMap[sid] + ' 人听过';
+        }
+      }
+    });
+  }).catch(() => {
+    // API 失败时保持本地默认值，无需处理
   });
 })();
 </script>

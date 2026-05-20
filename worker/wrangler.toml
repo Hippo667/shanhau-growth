@@ -1,0 +1,8 @@
+name = "shanhau-api"
+main = "src/index.ts"
+compatibility_date = "2026-05-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "shanhau-db"
+database_id = "901a53f2-3fb0-4a56-b43e-4e1f1ddb8c3a"

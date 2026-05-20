@@ -15,6 +15,14 @@
   // 更新页面标题
   document.title = story.title + ' - 小问号科学周刊';
 
+  // 阅读量 +1（fire-and-forget，不影响页面渲染）
+  api.incrementRead(storyId).then(data => {
+    if (data && data.read_count) {
+      const countEl = document.querySelector('#storyHeader p');
+      if (countEl) countEl.innerHTML = '⭐ ' + data.read_count + ' 人读过';
+    }
+  }).catch(() => {});
+
   // 故事索引（用于上下篇导航）
   const storyIndex = STORIES.findIndex(s => s.id === storyId);
   const prevStory = storyIndex > 0 ? STORIES[storyIndex - 1] : null;
@@ -198,7 +206,7 @@
     };
   }
 
-  // === 留言功能 ===
+  // === 留言功能（API 优先，localStorage 兜底） ===
   const STORAGE_KEY = 'wks_comments_' + story.id;
   let selectedEmoji = '🌟';
 
@@ -214,28 +222,39 @@
   // 默认选中第一个
   document.querySelector('#emojiPicker .emoji-option[data-emoji="🌟"]').classList.add('selected');
 
-  function loadComments() {
+  function loadLocalComments() {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
   }
 
-  function saveComments(comments) {
+  function saveLocalComments(comments) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(comments));
   }
 
-  function renderComments() {
-    const comments = loadComments();
+  // 格式化时间
+  function fmtDate(dateStr) {
+    if (!dateStr) return '';
+    // ISO: "2026-05-20T08:30:00Z" → "5/20 08:30"
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return (d.getMonth() + 1) + '/' + d.getDate() + ' ' +
+        String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    } catch (_) { return dateStr; }
+  }
+
+  function renderComments(comments) {
     const container = document.getElementById('commentsList');
-    if (comments.length === 0) {
+    if (!comments || comments.length === 0) {
       container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:10px;font-size:0.9rem;">还没有留言，来做第一个留言的小朋友吧 ✨</p>';
       return;
     }
     container.innerHTML = comments.map(c => `
       <div class="comment-item">
-        <span class="comment-emoji">${c.emoji}</span>
+        <span class="comment-emoji">${escapeHtml(c.emoji)}</span>
         <div>
-          <p class="comment-text">${escapeHtml(c.text)}</p>
-          <span class="comment-time">${c.date}</span>
+          <p class="comment-text">${escapeHtml(c.content || c.text)}</p>
+          <span class="comment-time">${fmtDate(c.created_at) || c.date}</span>
         </div>
       </div>
     `).join('');
@@ -243,11 +262,31 @@
 
   function escapeHtml(str) {
     const div = document.createElement('div');
-    div.textContent = str;
+    div.textContent = str || '';
     return div.innerHTML;
   }
 
-  // 发送留言
+  // 从 API 加载留言，失败则从 localStorage 加载
+  function loadComments() {
+    api.getComments(storyId).then(data => {
+      const apiComments = (data.comments || []).map(c => ({
+        emoji: c.emoji,
+        content: c.content,
+        created_at: c.created_at,
+        text: c.content,
+        date: fmtDate(c.created_at),
+      }));
+      renderComments(apiComments);
+      // 同步到 localStorage 作为缓存
+      saveLocalComments(apiComments);
+    }).catch(() => {
+      // API 失败，用 localStorage 兜底
+      const local = loadLocalComments();
+      renderComments(local);
+    });
+  }
+
+  // 发送留言：先发 API，同时存 localStorage
   document.getElementById('btnSend').addEventListener('click', function() {
     const input = document.getElementById('commentInput');
     const text = input.value.trim();
@@ -255,20 +294,30 @@
       showToast('请先写点想说的话吧 ✍️');
       return;
     }
-    const comments = loadComments();
-    comments.unshift({
-      emoji: selectedEmoji,
-      text: text,
-      date: new Date().toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+
+    api.postComment(storyId, selectedEmoji, text).then(data => {
+      // API 成功：重新加载留言
+      input.value = '';
+      loadComments();
+      showToast('留言发送成功！谢谢你的话 ❤️');
+    }).catch(err => {
+      // API 失败：存到 localStorage
+      const comments = loadLocalComments();
+      comments.unshift({
+        emoji: selectedEmoji,
+        text: text,
+        content: text,
+        date: new Date().toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      });
+      saveLocalComments(comments);
+      input.value = '';
+      renderComments(comments);
+      showToast('留言已保存到本地，联网后会自动同步 📡');
     });
-    saveComments(comments);
-    input.value = '';
-    renderComments();
-    showToast('留言发送成功！谢谢你的话 ❤️');
   });
 
-  // 初始渲染留言
-  renderComments();
+  // 初始加载留言
+  loadComments();
 
   // === 自动播放（从首页听故事入口进入） ===
   if (autoListen) {

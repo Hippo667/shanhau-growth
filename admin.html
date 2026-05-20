@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - 小问号科学周刊</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" width="42" height="42">
+        <circle cx="25" cy="25" r="24" fill="#FF9A56"/>
+        <ellipse cx="18" cy="22" rx="14" ry="12" fill="#FFF8E7"/>
+        <polygon points="10,16 4,8 20,8 22,16" fill="#FF9A56"/>
+        <polygon points="18,16 12,8 28,8 30,16" fill="#FF9A56"/>
+        <circle cx="14" cy="19" r="3.5" fill="#4A3728"/>
+        <circle cx="24" cy="19" r="3.5" fill="#4A3728"/>
+        <ellipse cx="19" cy="26" rx="6" ry="3.5" fill="#4A3728"/>
+      </svg>
+      管理后台
+    </a>
+    <nav class="nav-links">
+      <a href="index.html">故事宝箱</a>
+      <a href="story.html?id=1">看故事</a>
+      <a href="letter.html">我想写信</a>
+      <a href="about.html">关于我们</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page-container">
+
+  <!-- 登录界面 -->
+  <div class="admin-login" id="adminLogin">
+    <div class="admin-login-card">
+      <h2>🔐 管理员登录</h2>
+      <p style="color:var(--text-light);margin-bottom:16px;font-size:0.9rem;">输入密码进入管理后台</p>
+      <input type="password" id="adminPassword" class="admin-pwd-input" placeholder="请输入管理员密码" autocomplete="off">
+      <button class="btn-donate" id="btnLogin" style="width:100%;margin-top:12px;">进入管理后台</button>
+      <p id="loginError" style="color:#FF6B6B;margin-top:10px;font-size:0.85rem;display:none;"></p>
+    </div>
+  </div>
+
+  <!-- 后台面板（登录后显示） -->
+  <div class="admin-dashboard hidden" id="adminDashboard">
+    <div class="admin-header-bar">
+      <h2>📊 管理后台</h2>
+      <button class="btn-back" id="btnLogout" style="color:#FF6B6B;">退出登录</button>
+    </div>
+
+    <!-- 标签切换 -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="adminLetters">💌 孩子来信</button>
+      <button class="tab-btn" data-tab="adminStats">📈 数据统计</button>
+    </div>
+
+    <!-- 信件列表 -->
+    <div id="tab-adminLetters" class="admin-letters-list"></div>
+
+    <!-- 统计面板 -->
+    <div id="tab-adminStats" class="admin-stats-panel hidden">
+      <div class="about-section">
+        <h3>📖 故事阅读量</h3>
+        <div id="statsStories" class="stats-grid"></div>
+      </div>
+      <div class="about-section">
+        <h3>📊 总体数据</h3>
+        <div class="stats-summary" id="statsSummary"></div>
+      </div>
+    </div>
+
+    <!-- 分页 -->
+    <div class="admin-pagination hidden" id="adminPagination"></div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <p>用温暖的科学故事，陪伴每一个孩子认识世界 <span class="heart">♥</span></p>
+  <p>小问号科学周刊 · 大学生志愿者公益项目</p>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
