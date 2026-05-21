@@ -1,6 +1,6 @@
 /* 小问号科学周刊 — API 客户端模块 */
 
-const API_BASE = 'https://shanhau-api.u202542459.workers.dev';
+const API_BASE = 'https://api.dhmsweb.asia';
 
 const api = {
   // 通用 fetch 封装
