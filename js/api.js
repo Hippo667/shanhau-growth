@@ -6,20 +6,23 @@ const api = {
   // 通用 fetch 封装
   async _fetch(path, options = {}) {
     let res;
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    };
     try {
-      res = await fetch(API_BASE + path, {
-        headers: { 'Content-Type': 'application/json', ...options.headers },
-        ...options,
-      });
+      res = await fetch(API_BASE + path, { ...options, headers });
     } catch (_err) {
       throw new Error('网络连接失败，请检查网络后重试');
     }
 
-    const data = await res.json().catch(() => ({}));
+    // 401 等 HTTP 错误单独处理
     if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
       throw new Error(data.error || '服务器出错了，请稍后再试');
     }
-    return data;
+
+    return res.json();
   },
 
   // ---- 阅读量 ----

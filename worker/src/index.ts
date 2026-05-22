@@ -12,15 +12,22 @@ interface Env {
 
 const ALLOWED_ORIGIN = 'https://hippo667.github.io';
 
-// 允许本地开发时的 localhost 访问
-const DEV_ORIGINS = ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:3000'];
+// 允许自定义域名和本地开发
+const ALLOWED_ORIGINS = [
+  'https://hippo667.github.io',
+  'https://dhmsweb.asia',
+  'http://dhmsweb.asia',
+  'http://localhost:8080',
+  'http://127.0.0.1:8080',
+  'http://localhost:3000',
+];
 
 const ALLOWED_EMOJIS = ['😊', '🌟', '❤️', '👍', '🦊', '🌈'];
 const ALLOWED_MOODS = ['😊', '😢', '🤔', '😴', '🥳', '😤'];
 
 function corsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('Origin') || '';
-  const allowOrigin = [ALLOWED_ORIGIN, ...DEV_ORIGINS].includes(origin) ? origin : ALLOWED_ORIGIN;
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGIN;
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -40,19 +47,12 @@ function errorJson(message: string, status = 400): Response {
   return json({ error: message }, status);
 }
 
-// Bearer token 认证（常数时间比较，防时序攻击）
-async function verifyAuth(request: Request, env: Env): Promise<boolean> {
+// Bearer token 认证
+function verifyAuth(request: Request, env: Env): boolean {
   const auth = request.headers.get('Authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   if (!token || !env.ADMIN_PASSWORD) return false;
-
-  const enc = new TextEncoder();
-  const a = enc.encode(token);
-  const b = enc.encode(env.ADMIN_PASSWORD);
-  if (a.byteLength !== b.byteLength) return false;
-
-  // timingSafeEqual
-  return crypto.subtle.timingSafeEqual(a, b);
+  return token === env.ADMIN_PASSWORD;
 }
 
 // URL 路径解析
@@ -154,7 +154,7 @@ async function handlePostLetter(body: any, env: Env): Promise<Response> {
 
 // GET /api/admin/letters — 查看所有信件（需认证）
 async function handleAdminLetters(request: Request, env: Env): Promise<Response> {
-  if (!(await verifyAuth(request, env))) {
+  if (!verifyAuth(request, env)) {
     return errorJson('密码不对哦', 401);
   }
 
@@ -180,7 +180,7 @@ async function handleAdminLetters(request: Request, env: Env): Promise<Response>
 
 // GET /api/admin/stats — 查看统计数据（需认证）
 async function handleAdminStats(request: Request, env: Env): Promise<Response> {
-  if (!(await verifyAuth(request, env))) {
+  if (!verifyAuth(request, env)) {
     return errorJson('密码不对哦', 401);
   }
 
